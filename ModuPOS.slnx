@@ -7,6 +7,7 @@
   <Project Path="ModuPOS.Database/ModuPOS.Database.csproj" Id="f4f03b92-0b9b-4523-b1ac-dd4896dc0bb5" />
   <Project Path="ModuPOS.FeatureManagement/ModuPOS.FeatureManagement.csproj" Id="fce6ff19-a851-4bcf-9b20-07ccdad655e3" />
   <Project Path="ModuPOS.Inventory/ModuPOS.Inventory.csproj" Id="3640a0b6-bb2d-4e98-bf84-269b4c2fe86c" />
+  <Project Path="ModuPOS.LicenseManagement/ModuPOS.LicenseManagement.csproj" Id="c4ddf360-2f8b-453e-baf4-5e66131d399e" />
   <Project Path="ModuPOS.Loyalty/ModuPOS.Loyalty.csproj" Id="9dd9c82d-22ff-437b-b5d0-b4f5e6145a6a" />
   <Project Path="ModuPOS.Reporting/ModuPOS.Reporting.csproj" Id="639ed02a-8516-4486-8f5e-8c5c3c18bde1" />
   <Project Path="ModuPOS.Sale/ModuPOS.Sale.csproj" Id="b4cc56a1-328a-424e-985b-a7d175c58619" />

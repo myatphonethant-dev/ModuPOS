@@ -1,4 +1,4 @@
-﻿namespace ModuPOS.FeatureManagement
+﻿namespace ModuPOS.LicenseManagement
 {
     public class Class1
     {
