@@ -3,5 +3,11 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="ModuPOS.Api/ModuPOS.Api.csproj" Id="b9e2fba5-093d-4524-8d26-495891e382b3" />
+  <Project Path="ModuPOS.Auth/ModuPOS.Auth.csproj" Id="6a485ecf-d5c1-4822-b30c-ee6c3910ee82" />
   <Project Path="ModuPOS.Database/ModuPOS.Database.csproj" Id="f4f03b92-0b9b-4523-b1ac-dd4896dc0bb5" />
+  <Project Path="ModuPOS.Inventory/ModuPOS.Inventory.csproj" Id="3640a0b6-bb2d-4e98-bf84-269b4c2fe86c" />
+  <Project Path="ModuPOS.Loyalty/ModuPOS.Loyalty.csproj" Id="9dd9c82d-22ff-437b-b5d0-b4f5e6145a6a" />
+  <Project Path="ModuPOS.Reporting/ModuPOS.Reporting.csproj" Id="639ed02a-8516-4486-8f5e-8c5c3c18bde1" />
+  <Project Path="ModuPOS.Sale/ModuPOS.Sale.csproj" Id="b4cc56a1-328a-424e-985b-a7d175c58619" />
+  <Project Path="ModuPOS.Shared/ModuPOS.Shared.csproj" Id="6af05dd7-b973-4177-a033-550abb3a39a8" />
 </Solution>
