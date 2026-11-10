@@ -2,32 +2,17 @@
 
 namespace ModuPOS.FeatureManagement.Features.CustomerFeatures;
 
-public class CustomerFeatureService(
-ICustomerFeatureRepository repository) : IFeatureManager
+public sealed class CustomerFeatureService(
+    ICustomerFeatureRepository repository)
 {
-    public async Task<bool> IsEnabledAsync(
+    public Task<CustomerFeature?> GetAsync(
         Guid customerId,
         string featureCode,
         CancellationToken cancellationToken = default)
     {
-        var customerFeature = await repository.GetAsync(
+        return repository.GetAsync(
             customerId,
             featureCode,
             cancellationToken);
-
-        if (customerFeature is null || !customerFeature.IsEnabled)
-            return false;
-
-        var now = DateTime.UtcNow;
-
-        if (customerFeature.StartDate.HasValue &&
-            now < customerFeature.StartDate.Value)
-            return false;
-
-        if (customerFeature.ExpiryDate.HasValue &&
-            now >= customerFeature.ExpiryDate.Value)
-            return false;
-
-        return true;
     }
 }

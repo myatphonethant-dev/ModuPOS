@@ -7,13 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Services - Copy\**" />
-    <EmbeddedResource Remove="Services - Copy\**" />
-    <None Remove="Services - Copy\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
+	  <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
   </ItemGroup>
 
 </Project>

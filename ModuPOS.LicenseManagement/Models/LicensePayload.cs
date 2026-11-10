@@ -1,18 +1,18 @@
 ﻿namespace ModuPOS.LicenseManagement.Models;
 
-public class LicensePayload
+public sealed class LicensePayload
 {
-    public required string LicenseId { get; set; }
+    public required string LicenseId { get; init; }
 
-    public required string CustomerId { get; set; }
+    public required Guid CustomerId { get; init; }
 
-    public required string InstallationId { get; set; }
+    public required string InstallationId { get; init; }
 
-    public required string LicenseType { get; set; }
+    public required string LicenseType { get; init; }
 
-    public required List<string> Features { get; set; }
+    public required List<string> Features { get; init; }
 
-    public DateTime IssuedAt { get; set; }
+    public DateTime IssuedAt { get; init; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTime ExpiresAt { get; init; }
 }

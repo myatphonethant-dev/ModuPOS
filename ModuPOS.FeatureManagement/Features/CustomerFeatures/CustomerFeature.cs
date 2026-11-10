@@ -1,4 +1,6 @@
-﻿namespace ModuPOS.FeatureManagement.Features.CustomerFeatures;
+﻿using ModuPOS.FeatureManagement.Features.FeatureRegistry;
+
+namespace ModuPOS.FeatureManagement.Features.CustomerFeatures;
 
 public class CustomerFeature
 {
@@ -7,6 +9,8 @@ public class CustomerFeature
     public Guid CustomerId { get; set; }
 
     public Guid FeatureId { get; set; }
+
+    public Feature? Feature { get; set; }
 
     public bool IsEnabled { get; set; }
 
