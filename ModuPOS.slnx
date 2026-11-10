@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Documentation/">
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="ModuPOS.Api/ModuPOS.Api.csproj" Id="b9e2fba5-093d-4524-8d26-495891e382b3" />
+  <Project Path="ModuPOS.Database/ModuPOS.Database.csproj" Id="f4f03b92-0b9b-4523-b1ac-dd4896dc0bb5" />
+</Solution>
