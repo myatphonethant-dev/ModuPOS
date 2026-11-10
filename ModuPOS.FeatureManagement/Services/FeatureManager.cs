@@ -1,4 +1,6 @@
-﻿using ModuPOS.FeatureManagement.Features.FeatureDependencies;
+﻿
+using ModuPOS.FeatureManagement.Features.CustomerFeatures;
+using ModuPOS.FeatureManagement.Features.FeatureDependencies;
 using ModuPOS.FeatureManagement.Features.FeatureRegistry;
 using ModuPOS.FeatureManagement.Interfaces;
 using ModuPOS.LicenseManagement.Interfaces;
@@ -6,7 +8,7 @@ using ModuPOS.LicenseManagement.Interfaces;
 namespace ModuPOS.FeatureManagement.Services;
 
 public sealed class FeatureManager(
-    ICustomerFeatureRepository customerFeatureRepository,
+    CustomerFeatureService customerFeatureService,
     ILicenseProvider licenseProvider) : IFeatureManager
 {
     public async Task<bool> IsEnabledAsync(
@@ -34,6 +36,7 @@ public sealed class FeatureManager(
             featureCode,
             licensedFeatures,
             new HashSet<string>(StringComparer.Ordinal),
+            DateTime.UtcNow,
             cancellationToken);
     }
 
@@ -42,6 +45,7 @@ public sealed class FeatureManager(
         string featureCode,
         HashSet<string> licensedFeatures,
         HashSet<string> evaluationPath,
+        DateTime now,
         CancellationToken cancellationToken)
     {
         if (!FeatureCodes.IsKnown(featureCode) ||
@@ -55,7 +59,7 @@ public sealed class FeatureManager(
 
         try
         {
-            var assignment = await customerFeatureRepository.GetAsync(
+            var assignment = await customerFeatureService.GetAsync(
                 customerId,
                 featureCode,
                 cancellationToken);
@@ -67,8 +71,6 @@ public sealed class FeatureManager(
             {
                 return false;
             }
-
-            var now = DateTime.UtcNow;
 
             if (assignment.StartDate.HasValue &&
                 now < EnsureUtc(assignment.StartDate.Value))
@@ -90,6 +92,7 @@ public sealed class FeatureManager(
                     dependency,
                     licensedFeatures,
                     evaluationPath,
+                    now,
                     cancellationToken);
 
                 if (!dependencyAvailable)
