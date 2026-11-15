@@ -1,6 +1,120 @@
-@ModuPOS.Api_HostAddress = http://localhost:5203
+# Quickstart scenarios (specs/001-auth-dynamic-rbac/quickstart.md).
+# Dev seed: business "Demo", branches A and B (active) and C (inactive), users "owner" and "staff"
+# (password in appsettings.Development.json, DevSeed section). Business endpoints need a valid
+# license in the License settings, otherwise they answer 403 license_invalid.
+# Paste ids and tokens from earlier responses into the variables below.
 
-GET {{ModuPOS.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@host = http://localhost:5203
+@password = DevOnly-Passw0rd!
+@ownerToken = paste-owner-access-token
+@staffToken = paste-staff-access-token
+@refreshToken = paste-a-refresh-token
+@staffProfileId = paste-staff-profile-id
+@branchA = paste-branch-a-id
+@branchB = paste-branch-b-id
+@branchC = paste-branch-c-id
+@roleId = paste-role-id
+@roleVersion = paste-role-version
+@assignmentId = paste-assignment-id
+@ownerAssignmentId = paste-owner-assignment-id
+@ownerProfileId = paste-owner-profile-id
+@otherBusinessRoleId = paste-a-role-id-from-another-business
+@businessId = paste-business-id
+
+### 1. Sign in as Owner -> 200, next = portal_selected
+POST {{host}}/api/auth/sign-in
+Content-Type: application/json
+
+{ "login": "owner", "password": "{{password}}" }
+
+### 2. Wrong password (send 5 times) -> 401 x4, then 423 account_locked
+POST {{host}}/api/auth/sign-in
+Content-Type: application/json
+
+{ "login": "staff", "password": "wrong" }
+
+### 3a. Renew -> 200 with a new pair
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+
+{ "refreshToken": "{{refreshToken}}" }
+
+### 3b. Renew again with the SAME token -> 401 refresh_reused, session ended
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+
+{ "refreshToken": "{{refreshToken}}" }
+
+### 4. Owner creates a role with role.manage only -> 201, addedDependencies = [role.view]
+POST {{host}}/api/roles
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{ "name": "Senior Cashier", "permissions": ["role.manage"] }
+
+### 5a. Give it to staff at branch A
+POST {{host}}/api/staff/{{staffProfileId}}/role-assignments
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{ "roleId": "{{roleId}}", "branchId": "{{branchA}}" }
+
+### 5b. Staff lists branches (several -> choose_branch)
+GET {{host}}/api/auth/branches
+Authorization: Bearer {{staffToken}}
+
+### 5c. Staff selects A, then calls GET /api/roles -> 200; select B and repeat -> 403 permission_denied
+POST {{host}}/api/auth/branch
+Authorization: Bearer {{staffToken}}
+Content-Type: application/json
+
+{ "branchId": "{{branchA}}" }
 
 ###
+GET {{host}}/api/roles
+Authorization: Bearer {{staffToken}}
+
+### 6. Select inactive branch C -> 403 branch_denied, reason = inactive
+POST {{host}}/api/auth/branch
+Authorization: Bearer {{staffToken}}
+Content-Type: application/json
+
+{ "branchId": "{{branchC}}" }
+
+### 7. Owner removes role.manage (keeps role.view) -> staff's next manage call is refused within 5 s
+PUT {{host}}/api/roles/{{roleId}}
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{ "name": "Senior Cashier", "permissions": ["role.view"], "version": "{{roleVersion}}" }
+
+### 8. Delete a role that is still assigned -> 409 role_in_use with holders
+DELETE {{host}}/api/roles/{{roleId}}
+Authorization: Bearer {{ownerToken}}
+
+### 9. Remove the only Owner assignment -> 409 last_owner
+DELETE {{host}}/api/staff/{{ownerProfileId}}/role-assignments/{{ownerAssignmentId}}
+Authorization: Bearer {{ownerToken}}
+
+### 10. Role of another business -> 404 (audited ACCESS.CROSS_TENANT_DENIED, High)
+GET {{host}}/api/roles/{{otherBusinessRoleId}}
+Authorization: Bearer {{ownerToken}}
+
+### 11. Audit log for the business (needs audit.view)
+GET {{host}}/api/audit?code=ROLE.CREATED&pageSize=20
+Authorization: Bearer {{ownerToken}}
+
+### 12. Platform view without a reason -> 400 reason_required (needs a platform admin token)
+GET {{host}}/api/platform/businesses/{{businessId}}/audit
+Authorization: Bearer {{ownerToken}}
+
+### Who am I / sign out
+GET {{host}}/api/auth/me
+Authorization: Bearer {{ownerToken}}
+
+###
+POST {{host}}/api/auth/sign-out
+Authorization: Bearer {{ownerToken}}
+
+### Health (Degraded if audit entries stay unsaved > 5 minutes)
+GET {{host}}/health
