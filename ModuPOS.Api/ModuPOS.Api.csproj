@@ -13,6 +13,9 @@
   <ItemGroup>
     <ProjectReference Include="..\ModuPOS.FeatureManagement\ModuPOS.FeatureManagement.csproj" />
     <ProjectReference Include="..\ModuPOS.LicenseManagement\ModuPOS.LicenseManagement.csproj" />
+    <ProjectReference Include="..\ModuPOS.Auth\ModuPOS.Auth.csproj" />
+    <ProjectReference Include="..\ModuPOS.Organization\ModuPOS.Organization.csproj" />
+    <ProjectReference Include="..\ModuPOS.Database\ModuPOS.Database.csproj" />
   </ItemGroup>
 
 </Project>
