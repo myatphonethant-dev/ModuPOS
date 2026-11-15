@@ -6,4 +6,22 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <InternalsVisibleTo Include="ModuPOS.Auth.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="10.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModuPOS.Shared\ModuPOS.Shared.csproj" />
+    <ProjectReference Include="..\ModuPOS.Organization\ModuPOS.Organization.csproj" />
+    <ProjectReference Include="..\ModuPOS.FeatureManagement\ModuPOS.FeatureManagement.csproj" />
+    <ProjectReference Include="..\ModuPOS.LicenseManagement\ModuPOS.LicenseManagement.csproj" />
+  </ItemGroup>
+
 </Project>
