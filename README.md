@@ -1,1 +1,1 @@
-# Modular POS (Advanced Point of Sale System)
+```README```
