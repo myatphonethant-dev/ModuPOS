@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using ModuPOS.LicenseManagement.Interfaces;
 using ModuPOS.LicenseManagement.Models;
 using ModuPOS.LicenseManagement.Services;
@@ -19,6 +20,9 @@ public static class DependencyInjection
         services.AddSingleton<ILicenseValidator, LicenseValidator>();
 
         services.AddSingleton<ILicenseProvider, LicenseProvider>();
+
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<ITenantLicenseStatus, TenantLicenseStatus>();
 
         return services;
     }
