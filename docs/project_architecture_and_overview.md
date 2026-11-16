@@ -1,4 +1,4 @@
-# 🏥 PROJECT Development & Architecture Guide
+# 🏥 ModuPOS Development & Architecture Guide
 
 Welcome to the ModuPOS development team! This guide details our system architecture, project layout, and standard implementation patterns to help you build cohesive and clean features using our **Feature-based Organization**.
 
@@ -11,7 +11,7 @@ Our projects follow a strict **Feature-based Organization**. Instead of grouping
 The application follows a clean, direct request-to-persistence flow:
 
 ```
-Request (Client) ──> Controller (Domain Feature) ──> Service (Business Logic) ──> Database (EF Core / AppDbContext)
+Request (Client) ──> Controller (Api) ──> Service (Domain Feature) ──> Database (EF Core / AppDbContext)
 ```
 
 ---
@@ -20,94 +20,113 @@ Request (Client) ──> Controller (Domain Feature) ──> Service (Business L
 
 The solution is divided into the following projects and clients:
 
-| Project / Directory                 | Type / Framework                        | Purpose                                                                                                         |
-| :---------------------------------- | :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| **`{{PROJECT_NAME}}.Api`**          | ASP.NET Core {{DOTNET_VERSION}} Web API | Exposes RESTful endpoints, handles auth middleware, hosts SignalR/real-time hubs, and serves API documentation. |
-| **`{{PROJECT_NAME}}.Domain`**       | C# Class Library                        | Contains all business logic (Services), Controllers, DTOs, Realtime hubs, and Security extensions.              |
-| **`{{PROJECT_NAME}}.Database`**     | C# Class Library                        | EF Core context (`AppDbContext`) and scaffolded entity models (prefixed with `Tbl` or custom prefix).           |
-| **`{{PROJECT_NAME}}.Shared`**       | C# Class Library                        | Contains shared helpers, like pagination models and the standard `Result`/`Result<T>` pattern classes.          |
-| **`{{PROJECT_NAME}}.Domain.Tests`** | xUnit Test Project                      | Unit tests mirroring the `{{PROJECT_NAME}}.Domain` feature folder structure.                                    |
-| **`{{PROJECT_NAME}}.WebApp`**       | Blazor Web Assembly                     | Main web client application.                                                                                    |
-| **`{{PROJECT_NAME}}.Mobile`**       | Flutter                                 | Cross-platform mobile client application.                                                                       |
+| Project / Directory | Type / Framework | Purpose |
+| :--- | :--- | :--- |
+| **`ModuPOS.Api`** | ASP.NET Core (.NET 10.0) Web API | Exposes RESTful endpoints, handles auth middleware, and serves OpenAPI documentation. |
+| **`ModuPOS.Inventory`** | C# Class Library (.NET 10.0) | Contains Inventory business logic (Category, Product), DTOs, and services. |
+| **`ModuPOS.Organization`** | C# Class Library (.NET 10.0) | Contains Organization business logic (Branch, Staff, StaffRole, Shift, StaffShift). |
+| **`ModuPOS.Auth`** | C# Class Library (.NET 10.0) | Contains Identity and Security logic (User, Role, Permission, JWT Auth). |
+| **`ModuPOS.Database`** | C# Class Library (.NET 10.0) | EF Core context (`AppDbContext`) and scaffolded MSSQL database-first entity models. |
+| **`ModuPOS.Shared`** | C# Class Library (.NET 10.0) | Contains shared helpers, pagination models (`PagedResult<T>`, `PaginationRequest`), and standard `Result`/`Result<T>`. |
+| **`ModuPOS.FeatureManagement`** | C# Class Library (.NET 10.0) | Tenant feature flags and license gatekeeper. |
+| **`ModuPOS.LicenseManagement`** | C# Class Library (.NET 10.0) | Cryptographic license signature and payload verification. |
+| **`tests/ModuPOS.Auth.UnitTests`** | xUnit Test Project (.NET 10.0) | Unit tests verifying domain services using In-Memory EF Core context. |
+| **`tests/ModuPOS.Api.IntegrationTests`** | xUnit Test Project (.NET 10.0) | Integration tests using `WebApplicationFactory<Program>`. |
 
 ---
 
 ## **📂 Deep Dive: Feature-based Organization**
 
-Every business module (e.g., {{EXAMPLE_FEATURE_1}}, {{EXAMPLE_FEATURE_2}}) has dedicated folders inside `{{PROJECT_NAME}}.Domain`.
-
-### **Anatomy of a Feature**
-
-For any feature (e.g., `Features/{{EXAMPLE_FEATURE_1}}`), the code is organized across:
-
-1. **`ACST.Api/Controllers/`**
-   - **`[FeatureName]sController.cs`**: The API Controller exposing the REST endpoints. It receives requests, delegates processing to the service, and maps responses using the Result Pattern.
-2. **`ACST.Domain/Features/[FeatureName]/`**
-   - **`[FeatureName]Service.cs`** (and optional `I[FeatureName]Service.cs`): The business service class containing the feature logic (CRUD, validations, logic operations).
-3. **`ACST.Domain/DTOs/[FeatureName]/`**
-   - **`[FeatureName]DTO.cs`**: Request and Response data transfer objects (DTOs) for the feature endpoints.
-
-> [!IMPORTANT]
-> **Controllers live in `ACST.Api/Controllers/`**, exposing RESTful API endpoints and delegating business logic to services in `ACST.Domain`.
-
 ### **Current Features Registry**
 
-Here is the list of feature modules currently in the domain:
-{{FEATURES_LIST}}
+Here is the list of active feature modules currently in the domain:
+
+1. **Inventory (`ModuPOS.Inventory`)**:
+   - `Category`: Categories management with soft-delete (`DeleteFlag`).
+   - `Product`: Products catalog with pricing, stock quantity, category association, and soft-delete (`DeleteFlag`).
+2. **Organization (`ModuPOS.Organization`)**:
+   - `Branch`: Store branches (prohibits deletion via API per schema rules).
+   - `Staff`: Employee roster, contact details, branch affiliation, and soft-delete (`DeleteFlag`).
+   - `StaffRole`: Standalone organizational role profile and salary compensation catalog with soft-delete.
+   - `Shift`: Work period schedules (prohibits deletion via API per schema rules).
+   - `StaffShift`: Operational staff-to-shift assignments.
+3. **Authentication & Authorization (`ModuPOS.Auth`)**:
+   - `Auth`: JWT token generation, expiration tracking, refresh token rotation, and revocation.
+   - `User`: User accounts with hashed credentials, role assignment, active flag, and soft-delete (`is_deleted`).
+   - `Role`: System security roles and permission mappings.
+   - `Permission`: Granular permission catalog.
 
 ---
 
 ## **🔄 Service Registration & Dependency Injection**
 
-All domain features are registered in a single entry point: `{{PROJECT_NAME}}.Domain/FeatureManager.cs`.
+Each module provides its own modular dependency injection registration extension method in `FeatureManager.cs`:
 
-To register a new service, add it inside the `AddDomain` (or similar registration) extension method:
+- `builder.Services.AddInventoryModule();` in `ModuPOS.Inventory`
+- `builder.Services.AddOrganizationModule();` in `ModuPOS.Organization`
+- `builder.Services.AddAuthModule(builder.Configuration);` in `ModuPOS.Auth`
+- `builder.Services.AddModuPOSDatabase(builder.Configuration);` in `ModuPOS.Database`
 
-```csharp
-public static void AddDomain(this WebApplicationBuilder builder)
-{
-    // Database and external configs
-    builder.Services.AddDbContext<AppDbContext>(...);
-
-    // Feature Service Registrations
-    builder.Services.AddScoped<I{{EXAMPLE_FEATURE_1}}Service, {{EXAMPLE_FEATURE_1}}Service>();
-    // ...
-}
-```
+This keeps `Program.cs` lean and cohesive.
 
 ---
 
-## **🛡️ The Result Pattern**
+## **🛡️ The Result Pattern & Pagination Protocol**
 
-We do not throw business exceptions or return raw database entities. Instead, services wrap all operational outputs in a `Result` or `Result<T>` structure (from `{{PROJECT_NAME}}.Shared`).
+We do not throw business exceptions or return raw database entities. Instead, services wrap all operational outputs in a `Result`, `Result<T>`, or `PagedResult<T>` structure (from `ModuPOS.Shared`).
 
-### **Standard Service Signature**
+### **Standard Service Signatures**
 
 ```csharp
-public async Task<Result<{{EXAMPLE_FEATURE_1}}Dto>> Create{{EXAMPLE_FEATURE_1}}Async(Create{{EXAMPLE_FEATURE_1}}Request request)
+// Single entity operation
+public async Task<Result<ProductResponseDto>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
 {
-    // Validation & check existing records
-    if (await _context.Tbl{{EXAMPLE_FEATURE_1}}s.AnyAsync(...))
-    {
-        return Result.Failure<{{EXAMPLE_FEATURE_1}}Dto>("Record already exists.");
-    }
+    if (string.IsNullOrWhiteSpace(request.ProductCode) || string.IsNullOrWhiteSpace(request.Name))
+        return Result<ProductResponseDto>.Failure("Product code and name are required.");
 
-    var entity = new Tbl{{EXAMPLE_FEATURE_1}} { /* map fields */ };
-    _context.Tbl{{EXAMPLE_FEATURE_1}}s.Add(entity);
-    await _context.SaveChangesAsync();
+    var entity = new Product { /* map fields */ };
+    context.Products.Add(entity);
+    await context.SaveChangesAsync(cancellationToken);
 
-    return Result.Success(entity.ToDto());
+    return Result<ProductResponseDto>.Success(new ProductResponseDto(...));
+}
+
+// Paginated collection query
+public async Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId = null, string? search = null, PaginationRequest? request = null, CancellationToken cancellationToken = default)
+{
+    request ??= new PaginationRequest();
+    var query = context.Products.AsNoTracking().Where(p => !p.DeleteFlag);
+
+    var totalCount = await query.CountAsync(cancellationToken);
+    var items = await query
+        .OrderBy(p => p.ProductId)
+        .Skip((request.PageNumber - 1) * request.PageSize)
+        .Take(request.PageSize)
+        .Select(...)
+        .ToListAsync(cancellationToken);
+
+    var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
+    return PagedResult<ProductResponseDto>.Success(items, pagination);
 }
 ```
 
 ### **Controller Translation Pattern**
 
 ```csharp
-[HttpPost]
-public async Task<IActionResult> Create(Create{{EXAMPLE_FEATURE_1}}Request request)
+[HttpGet]
+public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken ct)
 {
-    var result = await _{{EXAMPLE_FEATURE_1_LOWER}}Service.Create{{EXAMPLE_FEATURE_1}}Async(request);
-    return result.IsSuccess ? Ok(result) : BadRequest(result);
+    var result = await productService.GetProductsAsync(request: request, cancellationToken: ct);
+    return Ok(result);
+}
+
+[HttpPost]
+public async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken ct)
+{
+    var result = await productService.CreateProductAsync(request, ct);
+    return result.IsSuccess
+        ? CreatedAtAction(nameof(GetById), new { id = result.Data!.ProductId }, result)
+        : BadRequest(result);
 }
 ```
 
@@ -115,34 +134,24 @@ public async Task<IActionResult> Create(Create{{EXAMPLE_FEATURE_1}}Request reque
 
 ## **💾 Database & Models**
 
-- **Scaffolded Entities**: DB tables map to C# classes prefixed with `Tbl` under `{{PROJECT_NAME}}.Database/Models/` (e.g. `Tbl{{EXAMPLE_FEATURE_1}}`).
-- **Dual-Provider Setup**:
-  - **Local Development**: {{LOCAL_DATABASE_PROVIDER}} configuration.
-  - **Production**: {{PROD_DATABASE_PROVIDER}} configuration.
-- **Seeding**: Setup and seeding process for the database.
+- **Database-First Schema**: Defined in `ModuPOS.Database/db.sql` and `docs/db_tables.md`.
+- **Entities**: Mapped under `ModuPOS.Database.AppDbContextModels/` within `AppDbContext`.
+- **Soft-Delete Rules**:
+  - `DeleteFlag` for `Product`, `Category`, `Staff`, `StaffRole`.
+  - `is_deleted` for `User`, `Role`, `Permission`, `RolePermission`.
+  - `Branch` and `Shift` do not have delete flags and their deletion is prohibited via the API.
+- **Audit Tracking**: Creation and update UTC timestamps and user identifiers are persisted for entities providing audit columns.
 
 ---
 
 ## **🧪 Automated Testing Guidance**
 
-We test business features using xUnit unit tests located in `{{PROJECT_NAME}}.Domain.Tests/`.
+We test business features using xUnit unit tests located in `tests/ModuPOS.Auth.UnitTests/` and integration tests in `tests/ModuPOS.Api.IntegrationTests/`.
 
-- Test classes mirror the folder structure under `Features/` (e.g. `{{PROJECT_NAME}}.Domain.Tests/{{EXAMPLE_FEATURE_1}}/{{EXAMPLE_FEATURE_1}}ServiceTests.cs`).
-- Tests utilize a test database helper (e.g., in-memory SQLite) ensuring database commands execute in a clean environment for each run.
+- Unit tests utilize an in-memory database helper (`UseInMemoryDatabase(Guid.NewGuid().ToString())`) ensuring a fresh environment for each test.
+- Every test follows the explicit `// Arrange`, `// Act`, and `// Assert` structure.
 
 ```sh
-# Run all unit tests
-dotnet test {{PROJECT_NAME}}.Domain.Tests
+# Run all automated tests
+dotnet test ModuPOS.slnx -c Release
 ```
-
----
-
-## **💡 Coding Conventions**
-
-1. **One Feature, One Directory**: Keep all logic, services, and controllers for a feature grouped in its domain folder.
-2. **DTO Isolation**: Put request/response models in `{{PROJECT_NAME}}.Domain/DTOs/[FeatureName]/` to preserve modularity.
-3. **No CQRS/Mediator**: Keep features simple. Use direct `Controller ──> Service ──> DbContext` interactions.
-4. **JWT Auth** (don't implement yet): Protect endpoints using `[Authorize(Roles = "...")]`.
-5. **Real-time** (optional): Hook events to real-time hubs (e.g., SignalR) for push notifications.
-
----
