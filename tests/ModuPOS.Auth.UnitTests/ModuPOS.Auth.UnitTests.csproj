@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -24,6 +25,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ModuPOS.Auth\ModuPOS.Auth.csproj" />
+    <ProjectReference Include="..\..\ModuPOS.Database\ModuPOS.Database.csproj" />
+    <ProjectReference Include="..\..\ModuPOS.Inventory\ModuPOS.Inventory.csproj" />
+    <ProjectReference Include="..\..\ModuPOS.Organization\ModuPOS.Organization.csproj" />
   </ItemGroup>
 
 </Project>
