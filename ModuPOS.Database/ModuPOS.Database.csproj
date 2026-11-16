@@ -2,9 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ModuPOS.Shared\ModuPOS.Shared.csproj" />
-    <ProjectReference Include="..\ModuPOS.Organization\ModuPOS.Organization.csproj" />
-    <ProjectReference Include="..\ModuPOS.Auth\ModuPOS.Auth.csproj" />
-    <ProjectReference Include="..\ModuPOS.FeatureManagement\ModuPOS.FeatureManagement.csproj" />
   </ItemGroup>
 
   <ItemGroup>
