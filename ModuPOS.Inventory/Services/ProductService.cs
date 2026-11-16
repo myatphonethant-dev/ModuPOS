@@ -9,22 +9,16 @@ using ModuPOS.Shared.Results;
 
 public class ProductService(AppDbContext context) : IProductService
 {
-    public async Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId = null, string? search = null, PaginationRequest? request = null, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<GetProductsResponse>> GetProductsAsync(GetProductsRequest? request = null, CancellationToken cancellationToken = default)
     {
-        request ??= new PaginationRequest();
+        request ??= new GetProductsRequest();
 
         var query = context.Products
             .AsNoTracking()
             .Where(p => !p.DeleteFlag);
 
-        if (categoryId.HasValue)
-            query = query.Where(p => p.CategoryId == categoryId.Value);
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var s = search.Trim();
-            query = query.Where(p => p.Name.Contains(s) || p.ProductCode.Contains(s));
-        }
+        if (request.CategoryId.HasValue)
+            query = query.Where(p => p.CategoryId == request.CategoryId.Value);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -33,7 +27,7 @@ public class ProductService(AppDbContext context) : IProductService
             join c in context.Categories.Where(x => !x.DeleteFlag) on p.CategoryId equals c.CategoryId into catGroup
             from cat in catGroup.DefaultIfEmpty()
             orderby p.ProductId
-            select new ProductResponseDto(
+            select new GetProductsResponse(
                 p.ProductId,
                 p.ProductCode,
                 p.CategoryId,
@@ -49,7 +43,50 @@ public class ProductService(AppDbContext context) : IProductService
         .ToListAsync(cancellationToken);
 
         var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
-        return PagedResult<ProductResponseDto>.Success(items, pagination);
+        return PagedResult<GetProductsResponse>.Success(items, pagination);
+    }
+
+    public async Task<PagedResult<SearchProductsResponse>> SearchProductsAsync(SearchProductsRequest? request = null, CancellationToken cancellationToken = default)
+    {
+        request ??= new SearchProductsRequest();
+
+        var query = context.Products
+            .AsNoTracking()
+            .Where(p => !p.DeleteFlag);
+
+        if (!string.IsNullOrWhiteSpace(request.Query))
+        {
+            var q = request.Query.Trim();
+            query = query.Where(p => p.Name.Contains(q) || p.ProductCode.Contains(q));
+        }
+
+        if (request.CategoryId.HasValue)
+            query = query.Where(p => p.CategoryId == request.CategoryId.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await (
+            from p in query
+            join c in context.Categories.Where(x => !x.DeleteFlag) on p.CategoryId equals c.CategoryId into catGroup
+            from cat in catGroup.DefaultIfEmpty()
+            orderby p.ProductId
+            select new SearchProductsResponse(
+                p.ProductId,
+                p.ProductCode,
+                p.CategoryId,
+                p.Name,
+                p.Price,
+                p.Quantity,
+                p.ImageUrl,
+                p.CreatedAt,
+                cat != null ? cat.CategoryName : null)
+        )
+        .Skip((request.PageNumber - 1) * request.PageSize)
+        .Take(request.PageSize)
+        .ToListAsync(cancellationToken);
+
+        var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
+        return PagedResult<SearchProductsResponse>.Success(items, pagination);
     }
 
     public async Task<Result<ProductResponseDto>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
