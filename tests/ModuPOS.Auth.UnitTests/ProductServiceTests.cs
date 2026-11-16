@@ -2,9 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Inventory.DTOs;
 using ModuPOS.Inventory.Services.Product;
+using ModuPOS.Shared.Pagination;
 
 namespace ModuPOS.Auth.UnitTests;
 
+/// <summary>
+/// Unit tests for <see cref="ProductService"/> covering CRUD, pagination, and soft-delete behaviors.
+/// </summary>
 public class ProductServiceTests
 {
     private static AppDbContext CreateContext()
@@ -21,7 +25,6 @@ public class ProductServiceTests
         // Arrange
         await using var context = CreateContext();
         var service = new ProductService(context);
-
         var request = new CreateProductRequest("P001", null, "Coca Cola", 1500m, 50m, null);
 
         // Act
@@ -66,5 +69,83 @@ public class ProductServiceTests
         var inDb = await context.Products.FindAsync(1);
         Assert.NotNull(inDb);
         Assert.True(inDb.DeleteFlag);
+    }
+
+    [Fact]
+    public async Task GetProductsAsync_PaginationClamping_ReturnsPagedResult()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        for (var i = 1; i <= 25; i++)
+        {
+            context.Products.Add(new Product
+            {
+                ProductId = i,
+                ProductCode = $"P{i:D3}",
+                Name = $"Product {i}",
+                Price = 100m * i,
+                Quantity = 10m,
+                DeleteFlag = false,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        await context.SaveChangesAsync();
+
+        var service = new ProductService(context);
+        var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
+
+        // Act
+        var result = await service.GetProductsAsync(request: request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(10, result.Data.Count);
+        Assert.Equal(2, result.Pagination.PageNumber);
+        Assert.Equal(10, result.Pagination.PageSize);
+        Assert.Equal(25, result.Pagination.TotalCount);
+        Assert.Equal(3, result.Pagination.TotalPages);
+        Assert.True(result.Pagination.HasPreviousPage);
+        Assert.True(result.Pagination.HasNextPage);
+    }
+
+    [Fact]
+    public async Task GetProductsAsync_ExcludesSoftDeletedProducts()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        context.Products.Add(new Product
+        {
+            ProductId = 101,
+            ProductCode = "ACT01",
+            Name = "Active Product",
+            Price = 500m,
+            Quantity = 5m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        context.Products.Add(new Product
+        {
+            ProductId = 102,
+            ProductCode = "DEL01",
+            Name = "Deleted Product",
+            Price = 500m,
+            Quantity = 0m,
+            DeleteFlag = true,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var service = new ProductService(context);
+        var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+
+        // Act
+        var result = await service.GetProductsAsync(request: request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Data);
+        Assert.Equal("ACT01", result.Data[0].ProductCode);
+        Assert.DoesNotContain(result.Data, p => p.ProductCode == "DEL01");
     }
 }

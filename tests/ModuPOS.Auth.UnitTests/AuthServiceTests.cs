@@ -99,7 +99,7 @@ public class AuthServiceTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Invalid username or password.", result.ErrorMessage);
+        Assert.Equal("Invalid username or password.", result.Message);
     }
 
     [Fact]
