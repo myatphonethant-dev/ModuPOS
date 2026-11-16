@@ -1,17 +1,18 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Inventory.DTOs;
-using ModuPOS.Inventory.Services.Category;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Inventory.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController(ICategoryService categoryService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await categoryService.GetCategoriesAsync(ct);
+        var result = await categoryService.GetCategoriesAsync(request, ct);
         return Ok(result);
     }
 
@@ -40,6 +41,6 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var result = await categoryService.DeleteCategoryAsync(id, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
     }
 }

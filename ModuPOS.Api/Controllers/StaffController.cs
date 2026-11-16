@@ -1,17 +1,18 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Organization.DTOs;
-using ModuPOS.Organization.Services.Staff;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Organization.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class StaffController(IStaffService staffService, IStaffRoleService staffRoleService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? branchCode, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] string? branchCode, [FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await staffService.GetStaffListAsync(branchCode, ct);
+        var result = await staffService.GetStaffListAsync(branchCode, request, ct);
         return Ok(result);
     }
 
@@ -40,22 +41,28 @@ public class StaffController(IStaffService staffService, IStaffRoleService staff
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var result = await staffService.DeleteStaffAsync(id, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
     }
 
-    // Staff Roles
     [HttpGet("roles")]
-    public async Task<IActionResult> GetRoles(CancellationToken ct)
+    public async Task<IActionResult> GetRoles([FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await staffRoleService.GetStaffRolesAsync(ct);
+        var result = await staffRoleService.GetStaffRolesAsync(request, ct);
         return Ok(result);
+    }
+
+    [HttpGet("roles/{id:int}")]
+    public async Task<IActionResult> GetRoleById(int id, CancellationToken ct)
+    {
+        var result = await staffRoleService.GetStaffRoleByIdAsync(id, ct);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
     }
 
     [HttpPost("roles")]
     public async Task<IActionResult> CreateRole([FromBody] CreateStaffRoleRequest request, CancellationToken ct)
     {
         var result = await staffRoleService.CreateStaffRoleAsync(request, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return result.IsSuccess ? CreatedAtAction(nameof(GetRoleById), new { id = result.Data!.StaffRoleId }, result) : BadRequest(result);
     }
 
     [HttpPut("roles/{id:int}")]
@@ -69,6 +76,6 @@ public class StaffController(IStaffService staffService, IStaffRoleService staff
     public async Task<IActionResult> DeleteRole(int id, CancellationToken ct)
     {
         var result = await staffRoleService.DeleteStaffRoleAsync(id, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
     }
 }

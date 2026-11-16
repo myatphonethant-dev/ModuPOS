@@ -1,30 +1,31 @@
+namespace ModuPOS.Inventory.Services;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Inventory.DTOs;
+using ModuPOS.Inventory.Interfaces;
+using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
-
-namespace ModuPOS.Inventory.Services.Category;
-
-public interface ICategoryService
-{
-    Task<Result<List<CategoryResponseDto>>> GetCategoriesAsync(CancellationToken cancellationToken = default);
-    Task<Result<CategoryResponseDto>> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default);
-    Task<Result<CategoryResponseDto>> UpdateCategoryAsync(int id, UpdateCategoryRequest request, CancellationToken cancellationToken = default);
-    Task<Result> DeleteCategoryAsync(int id, CancellationToken cancellationToken = default);
-}
 
 public class CategoryService(AppDbContext context) : ICategoryService
 {
-    public async Task<Result<List<CategoryResponseDto>>> GetCategoriesAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<CategoryResponseDto>> GetCategoriesAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var categories = await context.Categories
+        var query = context.Categories
             .AsNoTracking()
-            .Where(c => !c.DeleteFlag)
+            .Where(c => !c.DeleteFlag);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderBy(c => c.CategoryId)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(c => new CategoryResponseDto(c.CategoryId, c.CategoryCode, c.CategoryName))
             .ToListAsync(cancellationToken);
 
-        return Result.Success(categories);
+        var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
+        return PagedResult<CategoryResponseDto>.Success(items, pagination);
     }
 
     public async Task<Result<CategoryResponseDto>> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -34,23 +35,23 @@ public class CategoryService(AppDbContext context) : ICategoryService
             .FirstOrDefaultAsync(x => x.CategoryId == id && !x.DeleteFlag, cancellationToken);
 
         if (c is null)
-            return Result.Failure<CategoryResponseDto>("Category not found.");
+            return Result<CategoryResponseDto>.Failure("Category not found.");
 
-        return Result.Success(new CategoryResponseDto(c.CategoryId, c.CategoryCode, c.CategoryName));
+        return Result<CategoryResponseDto>.Success(new CategoryResponseDto(c.CategoryId, c.CategoryCode, c.CategoryName));
     }
 
     public async Task<Result<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.CategoryCode) || string.IsNullOrWhiteSpace(request.CategoryName))
-            return Result.Failure<CategoryResponseDto>("Category code and name are required.");
+            return Result<CategoryResponseDto>.Failure("Category code and name are required.");
 
         var exists = await context.Categories
             .AnyAsync(c => c.CategoryCode == request.CategoryCode && !c.DeleteFlag, cancellationToken);
 
         if (exists)
-            return Result.Failure<CategoryResponseDto>($"Category with code '{request.CategoryCode}' already exists.");
+            return Result<CategoryResponseDto>.Failure($"Category with code '{request.CategoryCode}' already exists.");
 
-        var entity = new ModuPOS.Database.AppDbContextModels.Category
+        var entity = new Category
         {
             CategoryCode = request.CategoryCode,
             CategoryName = request.CategoryName,
@@ -60,26 +61,26 @@ public class CategoryService(AppDbContext context) : ICategoryService
         context.Categories.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new CategoryResponseDto(entity.CategoryId, entity.CategoryCode, entity.CategoryName));
+        return Result<CategoryResponseDto>.Success(new CategoryResponseDto(entity.CategoryId, entity.CategoryCode, entity.CategoryName));
     }
 
     public async Task<Result<CategoryResponseDto>> UpdateCategoryAsync(int id, UpdateCategoryRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id && !c.DeleteFlag, cancellationToken);
         if (entity is null)
-            return Result.Failure<CategoryResponseDto>("Category not found.");
+            return Result<CategoryResponseDto>.Failure("Category not found.");
 
         var codeInUse = await context.Categories
             .AnyAsync(c => c.CategoryId != id && c.CategoryCode == request.CategoryCode && !c.DeleteFlag, cancellationToken);
         if (codeInUse)
-            return Result.Failure<CategoryResponseDto>($"Category with code '{request.CategoryCode}' already exists.");
+            return Result<CategoryResponseDto>.Failure($"Category with code '{request.CategoryCode}' already exists.");
 
         entity.CategoryCode = request.CategoryCode;
         entity.CategoryName = request.CategoryName;
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new CategoryResponseDto(entity.CategoryId, entity.CategoryCode, entity.CategoryName));
+        return Result<CategoryResponseDto>.Success(new CategoryResponseDto(entity.CategoryId, entity.CategoryCode, entity.CategoryName));
     }
 
     public async Task<Result> DeleteCategoryAsync(int id, CancellationToken cancellationToken = default)
@@ -91,6 +92,6 @@ public class CategoryService(AppDbContext context) : ICategoryService
         entity.DeleteFlag = true;
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return Result.Success("Category deleted successfully.");
     }
 }

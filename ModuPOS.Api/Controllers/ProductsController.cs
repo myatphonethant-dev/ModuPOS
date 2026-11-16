@@ -1,17 +1,25 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Inventory.DTOs;
-using ModuPOS.Inventory.Services.Product;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Inventory.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController(IProductService productService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? categoryId, [FromQuery] string? search, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] GetProductsRequest request, CancellationToken ct)
     {
-        var result = await productService.GetProductsAsync(categoryId, search, ct);
+        var result = await productService.GetProductsAsync(request, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] SearchProductsRequest request, CancellationToken ct)
+    {
+        var result = await productService.SearchProductsAsync(request, ct);
         return Ok(result);
     }
 
@@ -40,6 +48,6 @@ public class ProductsController(IProductService productService) : ControllerBase
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var result = await productService.DeleteProductAsync(id, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
     }
 }

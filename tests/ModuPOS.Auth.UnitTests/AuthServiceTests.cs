@@ -1,11 +1,12 @@
+namespace ModuPOS.Auth.UnitTests;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ModuPOS.Auth.DTOs;
-using ModuPOS.Auth.Services.Auth;
+using ModuPOS.Auth.Interfaces;
+using ModuPOS.Auth.Services;
 using ModuPOS.Database.AppDbContextModels;
-
-namespace ModuPOS.Auth.UnitTests;
 
 public class AuthServiceTests
 {
@@ -99,7 +100,7 @@ public class AuthServiceTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Invalid username or password.", result.ErrorMessage);
+        Assert.Equal("Invalid username or password.", result.Message);
     }
 
     [Fact]

@@ -1,8 +1,8 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Auth.DTOs;
-using ModuPOS.Auth.Services.Auth;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Auth.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]

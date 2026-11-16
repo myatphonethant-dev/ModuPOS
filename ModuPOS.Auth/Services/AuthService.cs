@@ -1,3 +1,5 @@
+namespace ModuPOS.Auth.Services;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -7,18 +9,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ModuPOS.Auth.DTOs;
+using ModuPOS.Auth.Interfaces;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Shared.Results;
 using UserEntity = ModuPOS.Database.AppDbContextModels.User;
-
-namespace ModuPOS.Auth.Services.Auth;
-
-public interface IAuthService
-{
-    Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
-    Task<Result<LoginResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
-    Task<Result> RevokeTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
-}
 
 public class AuthService(AppDbContext context, IConfiguration configuration) : IAuthService
 {
@@ -27,17 +21,17 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-            return Result.Failure<LoginResponse>("Username and password are required.");
+            return Result<LoginResponse>.Failure("Username and password are required.");
 
         var user = await context.Users
             .FirstOrDefaultAsync(u => u.Username == request.Username && !u.IsDeleted, cancellationToken);
 
         if (user is null || !user.IsActive)
-            return Result.Failure<LoginResponse>("Invalid username or password.");
+            return Result<LoginResponse>.Failure("Invalid username or password.");
 
         var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
         if (verificationResult == PasswordVerificationResult.Failed)
-            return Result.Failure<LoginResponse>("Invalid username or password.");
+            return Result<LoginResponse>.Failure("Invalid username or password.");
 
         return await GenerateTokenPairAsync(user, cancellationToken);
     }
@@ -45,22 +39,21 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
     public async Task<Result<LoginResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
-            return Result.Failure<LoginResponse>("Refresh token is required.");
+            return Result<LoginResponse>.Failure("Refresh token is required.");
 
         var tokenRecord = await context.RefreshTokens
             .FirstOrDefaultAsync(r => r.RefreshToken1 == request.RefreshToken && r.RevokedAt == null, cancellationToken);
 
         if (tokenRecord is null || tokenRecord.ExpiresAt <= DateTime.UtcNow)
-            return Result.Failure<LoginResponse>("Invalid or expired refresh token.");
+            return Result<LoginResponse>.Failure("Invalid or expired refresh token.");
 
-        // Revoke the old refresh token
         tokenRecord.RevokedAt = DateTime.UtcNow;
 
         var user = await context.Users
             .FirstOrDefaultAsync(u => u.Id == tokenRecord.UserId && !u.IsDeleted && u.IsActive, cancellationToken);
 
         if (user is null)
-            return Result.Failure<LoginResponse>("User account not found or inactive.");
+            return Result<LoginResponse>.Failure("User account not found or inactive.");
 
         return await GenerateTokenPairAsync(user, cancellationToken);
     }
@@ -76,12 +69,11 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         tokenRecord.RevokedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return Result.Success("Token revoked successfully.");
     }
 
     private async Task<Result<LoginResponse>> GenerateTokenPairAsync(UserEntity user, CancellationToken cancellationToken)
     {
-        // 1. Fetch role and permissions
         var role = await context.Roles
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == user.RoleId && !r.IsDeleted, cancellationToken);
@@ -93,7 +85,6 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
             select p.Name
         ).ToListAsync(cancellationToken);
 
-        // 2. Generate Access Token (JWT)
         var jwtSecret = configuration["Jwt:Secret"] ?? "ModuPOS_Super_Secret_Key_For_Jwt_Signing_Must_Be_Long_Enough_2026";
         var issuer = configuration["Jwt:Issuer"] ?? "ModuPOS";
         var audience = configuration["Jwt:Audience"] ?? "ModuPOS.Api";
@@ -125,7 +116,6 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
 
         var accessToken = new JwtSecurityTokenHandler().WriteToken(jwtToken);
 
-        // 3. Generate Refresh Token
         var refreshTokenString = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var refreshDays = configuration.GetValue<int?>("Jwt:RefreshTokenDays") ?? 7;
         var refreshExpires = DateTime.UtcNow.AddDays(refreshDays);
@@ -141,7 +131,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         context.RefreshTokens.Add(newRefreshToken);
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new LoginResponse(
+        return Result<LoginResponse>.Success(new LoginResponse(
             accessToken,
             refreshTokenString,
             expiresAt,

@@ -1,17 +1,18 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Auth.DTOs;
-using ModuPOS.Auth.Services.Role;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Auth.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class RolesController(IRoleService roleService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await roleService.GetRolesAsync(ct);
+        var result = await roleService.GetRolesAsync(request, ct);
         return Ok(result);
     }
 

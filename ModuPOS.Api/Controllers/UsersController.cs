@@ -1,17 +1,18 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Auth.DTOs;
-using ModuPOS.Auth.Services.User;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Auth.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController(IUserService userService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await userService.GetUsersAsync(ct);
+        var result = await userService.GetUsersAsync(request, ct);
         return Ok(result);
     }
 
@@ -40,6 +41,6 @@ public class UsersController(IUserService userService) : ControllerBase
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var result = await userService.DeleteUserAsync(id, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
     }
 }

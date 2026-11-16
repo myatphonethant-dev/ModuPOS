@@ -1,16 +1,17 @@
-using Microsoft.AspNetCore.Mvc;
-using ModuPOS.Auth.Services.Permission;
-
 namespace ModuPOS.Api.Controllers;
+
+using Microsoft.AspNetCore.Mvc;
+using ModuPOS.Auth.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class PermissionsController(IPermissionService permissionService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await permissionService.GetPermissionsAsync(ct);
+        var result = await permissionService.GetPermissionsAsync(request, ct);
         return Ok(result);
     }
 

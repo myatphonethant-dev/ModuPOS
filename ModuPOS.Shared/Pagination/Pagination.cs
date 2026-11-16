@@ -1,55 +1,53 @@
-﻿using ModuPOS.Shared.Results;
+﻿namespace ModuPOS.Shared.Pagination;
+
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Json.Serialization;
+using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Shared.Pagination
+public class Pagination
 {
-    public class Pagination
+    public int PageNumber { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+    public int TotalPages { get; init; }
+    public bool HasPreviousPage => PageNumber > 1;
+    public bool HasNextPage => PageNumber < TotalPages;
+
+    [JsonConstructor]
+    public Pagination(int pageNumber, int pageSize, int totalCount, int totalPages)
     {
-        public int PageNumber { get; init; }
-        public int PageSize { get; init; }
-        public int TotalCount { get; init; }
-        public int TotalPages { get; init; }
-        public bool HasPreviousPage => PageNumber > 1;
-        public bool HasNextPage => PageNumber < TotalPages;
-
-        [JsonConstructor]
-        public Pagination(int pageNumber, int pageSize, int totalCount, int totalPages)
-        {
-            PageNumber = pageNumber;
-            PageSize = pageSize;
-            TotalCount = totalCount;
-            TotalPages = totalPages;
-        }
-
-        public Pagination(int pageNumber, int pageSize, int totalCount)
-        {
-            PageNumber = pageNumber;
-            PageSize = pageSize;
-            TotalCount = totalCount;
-            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-        }
+        PageNumber = Math.Max(1, pageNumber);
+        PageSize = Math.Max(1, pageSize);
+        TotalCount = Math.Max(0, totalCount);
+        TotalPages = Math.Max(0, totalPages);
     }
 
-    public class PagedResult<T> : Result
+    public Pagination(int pageNumber, int pageSize, int totalCount)
     {
-        public List<T> Data { get; init; }
-        public Pagination Pagination { get; init; }
-
-        [JsonConstructor]
-        public PagedResult(bool isSuccess, string message, List<T> data, Pagination pagination)
-            : base(isSuccess, message)
-        {
-            Data = data;
-            Pagination = pagination;
-        }
-
-        public static PagedResult<T> Success(List<T> data, Pagination pagination, string message = "Success")
-            => new(true, message, data, pagination);
-
-        public new static PagedResult<T> Failure(string message)
-            => new(false, message, new List<T>(), new Pagination(0, 0, 0, 0));
+        PageNumber = Math.Max(1, pageNumber);
+        PageSize = Math.Max(1, pageSize);
+        TotalCount = Math.Max(0, totalCount);
+        TotalPages = (int)Math.Ceiling(TotalCount / (double)PageSize);
     }
+}
+
+public class PagedResult<T> : Result
+{
+    public List<T> Data { get; init; }
+    public Pagination Pagination { get; init; }
+
+    [JsonConstructor]
+    public PagedResult(bool isSuccess, string message, List<T> data, Pagination pagination)
+        : base(isSuccess, message)
+    {
+        Data = data;
+        Pagination = pagination;
+    }
+
+    public static PagedResult<T> Success(List<T> data, Pagination pagination, string message = "Success")
+        => new(true, message, data, pagination);
+
+    public new static PagedResult<T> Failure(string message)
+        => new(false, message, new List<T>(), new Pagination(1, 10, 0, 0));
 }

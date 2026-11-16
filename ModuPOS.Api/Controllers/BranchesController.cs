@@ -1,17 +1,18 @@
+namespace ModuPOS.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using ModuPOS.Organization.DTOs;
-using ModuPOS.Organization.Services.Branch;
-
-namespace ModuPOS.Api.Controllers;
+using ModuPOS.Organization.Interfaces;
+using ModuPOS.Shared.Pagination;
 
 [ApiController]
 [Route("api/[controller]")]
 public class BranchesController(IBranchService branchService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken ct)
     {
-        var result = await branchService.GetBranchesAsync(ct);
+        var result = await branchService.GetBranchesAsync(request, ct);
         return Ok(result);
     }
 

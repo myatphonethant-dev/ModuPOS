@@ -1,6 +1,6 @@
-using System.Text.Json.Serialization;
-
 namespace ModuPOS.Shared.Results;
+
+using System.Text.Json.Serialization;
 
 public class Result
 {
