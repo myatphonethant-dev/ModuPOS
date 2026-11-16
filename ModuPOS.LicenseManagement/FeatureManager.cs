@@ -7,8 +7,17 @@ using ModuPOS.LicenseManagement.Services;
 
 namespace ModuPOS.LicenseManagement;
 
-public static class DependencyInjection
+/// <summary>
+/// Feature manager and service registration for the LicenseManagement module.
+/// </summary>
+public static class FeatureManager
 {
+    /// <summary>
+    /// Registers LicenseManagement module services into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddLicenseManagement(
         this IServiceCollection services,
         IConfiguration configuration)

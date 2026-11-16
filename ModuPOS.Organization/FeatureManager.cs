@@ -5,8 +5,16 @@ using ModuPOS.Organization.Services.Staff;
 
 namespace ModuPOS.Organization;
 
-public static class DependencyInjection
+/// <summary>
+/// Feature manager and service registration for the Organization module.
+/// </summary>
+public static class FeatureManager
 {
+    /// <summary>
+    /// Registers Organization module services into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddOrganizationModule(this IServiceCollection services)
     {
         services.AddScoped<IBranchService, BranchService>();

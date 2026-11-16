@@ -7,8 +7,17 @@ using ModuPOS.Auth.Services.User;
 
 namespace ModuPOS.Auth;
 
-public static class DependencyInjection
+/// <summary>
+/// Feature manager and service registration for the Auth module.
+/// </summary>
+public static class FeatureManager
 {
+    /// <summary>
+    /// Registers Auth module services into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IAuthService, AuthService>();
