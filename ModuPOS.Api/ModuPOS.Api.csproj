@@ -8,14 +8,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModuPOS.FeatureManagement\ModuPOS.FeatureManagement.csproj" />
-    <ProjectReference Include="..\ModuPOS.LicenseManagement\ModuPOS.LicenseManagement.csproj" />
+    <ProjectReference Include="..\ModuPOS.Shared\ModuPOS.Shared.csproj" />
+    <ProjectReference Include="..\ModuPOS.Database\ModuPOS.Database.csproj" />
     <ProjectReference Include="..\ModuPOS.Auth\ModuPOS.Auth.csproj" />
     <ProjectReference Include="..\ModuPOS.Organization\ModuPOS.Organization.csproj" />
-    <ProjectReference Include="..\ModuPOS.Database\ModuPOS.Database.csproj" />
+    <ProjectReference Include="..\ModuPOS.Inventory\ModuPOS.Inventory.csproj" />
   </ItemGroup>
 
 </Project>

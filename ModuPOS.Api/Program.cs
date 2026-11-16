@@ -1,44 +1,51 @@
-using System.Threading.RateLimiting;
-using ModuPOS.Api.Controllers.Auth;
-using ModuPOS.Api.Infrastructure;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using ModuPOS.Auth;
-using ModuPOS.Auth.Http;
 using ModuPOS.Database;
-using ModuPOS.FeatureManagement;
-using ModuPOS.LicenseManagement;
+using ModuPOS.Inventory;
 using ModuPOS.Organization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Controllers & OpenAPI
 builder.Services.AddControllers();
-builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
-builder.Services.AddLicenseManagement(builder.Configuration);
-builder.Services.AddFeatureManagement();
+// Register Feature Modules
 builder.Services.AddModuPOSDatabase(builder.Configuration);
-builder.Services.AddOrganization();
-builder.Services.AddModuPOSAuth(builder.Configuration);
+builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddInventoryModule();
+builder.Services.AddOrganizationModule();
 
-builder.Services.AddRateLimiter(options =>
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "ModuPOS_Super_Secret_Key_For_Jwt_Signing_Must_Be_Long_Enough_2026";
+var issuer = builder.Configuration["Jwt:Issuer"] ?? "ModuPOS";
+var audience = builder.Configuration["Jwt:Audience"] ?? "ModuPOS.Api";
+
+builder.Services.AddAuthentication(options =>
 {
-    options.AddPolicy(AuthController.SignInRateLimitPolicy, context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = ModuPOS.Auth.DependencyInjection.SignInRateLimit(context.RequestServices),
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0
-            }));
-
-    options.OnRejected = (context, _) =>
-        new ValueTask(ProblemResponses.WriteAsync(context.HttpContext, AuthErrors.TooManyRequests));
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
-var app = builder.Build();
+builder.Services.AddAuthorization();
 
-await DevSeeder.MigrateAndSeedAsync(app);
+var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -47,14 +54,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
-app.UseRateLimiter();
-app.UseModuPOSAccessPipeline();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
 
 app.Run();
 
-/// <summary>Entry point, visible to integration tests.</summary>
 public partial class Program;
