@@ -1,11 +1,12 @@
+namespace ModuPOS.Auth.UnitTests;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ModuPOS.Auth.DTOs;
-using ModuPOS.Auth.Services.Auth;
+using ModuPOS.Auth.Interfaces;
+using ModuPOS.Auth.Services;
 using ModuPOS.Database.AppDbContextModels;
-
-namespace ModuPOS.Auth.UnitTests;
 
 public class AuthServiceTests
 {

@@ -1,14 +1,12 @@
+namespace ModuPOS.Auth.UnitTests;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Organization.DTOs;
-using ModuPOS.Organization.Services.Shift;
+using ModuPOS.Organization.Interfaces;
+using ModuPOS.Organization.Services;
 using ModuPOS.Shared.Pagination;
 
-namespace ModuPOS.Auth.UnitTests;
-
-/// <summary>
-/// Unit tests for <see cref="ShiftService"/> verifying shift management and staff-shift assignment operations.
-/// </summary>
 public class ShiftServiceTests
 {
     private static AppDbContext CreateContext()

@@ -1,3 +1,5 @@
+namespace ModuPOS.Api.IntegrationTests;
+
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -8,11 +10,6 @@ using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Inventory.DTOs;
 using ModuPOS.Shared.Pagination;
 
-namespace ModuPOS.Api.IntegrationTests;
-
-/// <summary>
-/// Integration tests verifying REST endpoint routing, status codes, and PagedResult payload contracts.
-/// </summary>
 public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;

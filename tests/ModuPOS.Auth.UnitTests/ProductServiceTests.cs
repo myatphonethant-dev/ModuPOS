@@ -1,14 +1,12 @@
+namespace ModuPOS.Auth.UnitTests;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Inventory.DTOs;
-using ModuPOS.Inventory.Services.Product;
+using ModuPOS.Inventory.Interfaces;
+using ModuPOS.Inventory.Services;
 using ModuPOS.Shared.Pagination;
 
-namespace ModuPOS.Auth.UnitTests;
-
-/// <summary>
-/// Unit tests for <see cref="ProductService"/> covering CRUD, pagination, and soft-delete behaviors.
-/// </summary>
 public class ProductServiceTests
 {
     private static AppDbContext CreateContext()
