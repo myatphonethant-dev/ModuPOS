@@ -5,6 +5,7 @@ using ModuPOS.Auth;
 using ModuPOS.Database;
 using ModuPOS.Inventory;
 using ModuPOS.Organization;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
