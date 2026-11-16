@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ModuPOS.Database\ModuPOS.Database.csproj" />
+    <ProjectReference Include="..\ModuPOS.Shared\ModuPOS.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
