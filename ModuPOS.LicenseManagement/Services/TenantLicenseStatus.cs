@@ -1,11 +1,7 @@
-using ModuPOS.LicenseManagement.Interfaces;
-
 namespace ModuPOS.LicenseManagement.Services;
 
-/// <summary>
-/// Per-business view of the installation license: valid when the current license (cached by
-/// <see cref="ILicenseProvider"/>) belongs to this business and has not expired.
-/// </summary>
+using ModuPOS.LicenseManagement.Interfaces;
+
 public sealed class TenantLicenseStatus(ILicenseProvider provider, TimeProvider time) : ITenantLicenseStatus
 {
     public async Task<bool> IsValidAsync(Guid businessId, CancellationToken cancellationToken = default)
