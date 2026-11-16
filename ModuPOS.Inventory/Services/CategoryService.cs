@@ -1,64 +1,14 @@
+namespace ModuPOS.Inventory.Services;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Inventory.DTOs;
+using ModuPOS.Inventory.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Inventory.Services.Category;
-
-/// <summary>
-/// Defines business operations for managing inventory categories.
-/// </summary>
-public interface ICategoryService
-{
-    /// <summary>
-    /// Retrieves a paginated list of non-deleted categories.
-    /// </summary>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of category response DTOs.</returns>
-    Task<PagedResult<CategoryResponseDto>> GetCategoriesAsync(PaginationRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a category by its identifier.
-    /// </summary>
-    /// <param name="id">The category primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The category response DTO if found; otherwise failure.</returns>
-    Task<Result<CategoryResponseDto>> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new category.
-    /// </summary>
-    /// <param name="request">The category creation request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created category response DTO if successful; otherwise failure.</returns>
-    Task<Result<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing category.
-    /// </summary>
-    /// <param name="id">The category primary key.</param>
-    /// <param name="request">The category update details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated category response DTO if successful; otherwise failure.</returns>
-    Task<Result<CategoryResponseDto>> UpdateCategoryAsync(int id, UpdateCategoryRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Soft-deletes a category by setting its DeleteFlag to true.
-    /// </summary>
-    /// <param name="id">The category primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<Result> DeleteCategoryAsync(int id, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core implementation for <see cref="ICategoryService"/>.
-/// </summary>
 public class CategoryService(AppDbContext context) : ICategoryService
 {
-    /// <inheritdoc />
     public async Task<PagedResult<CategoryResponseDto>> GetCategoriesAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var query = context.Categories
@@ -78,7 +28,6 @@ public class CategoryService(AppDbContext context) : ICategoryService
         return PagedResult<CategoryResponseDto>.Success(items, pagination);
     }
 
-    /// <inheritdoc />
     public async Task<Result<CategoryResponseDto>> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var c = await context.Categories
@@ -91,7 +40,6 @@ public class CategoryService(AppDbContext context) : ICategoryService
         return Result<CategoryResponseDto>.Success(new CategoryResponseDto(c.CategoryId, c.CategoryCode, c.CategoryName));
     }
 
-    /// <inheritdoc />
     public async Task<Result<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.CategoryCode) || string.IsNullOrWhiteSpace(request.CategoryName))
@@ -103,7 +51,7 @@ public class CategoryService(AppDbContext context) : ICategoryService
         if (exists)
             return Result<CategoryResponseDto>.Failure($"Category with code '{request.CategoryCode}' already exists.");
 
-        var entity = new ModuPOS.Database.AppDbContextModels.Category
+        var entity = new Category
         {
             CategoryCode = request.CategoryCode,
             CategoryName = request.CategoryName,
@@ -116,7 +64,6 @@ public class CategoryService(AppDbContext context) : ICategoryService
         return Result<CategoryResponseDto>.Success(new CategoryResponseDto(entity.CategoryId, entity.CategoryCode, entity.CategoryName));
     }
 
-    /// <inheritdoc />
     public async Task<Result<CategoryResponseDto>> UpdateCategoryAsync(int id, UpdateCategoryRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id && !c.DeleteFlag, cancellationToken);
@@ -136,7 +83,6 @@ public class CategoryService(AppDbContext context) : ICategoryService
         return Result<CategoryResponseDto>.Success(new CategoryResponseDto(entity.CategoryId, entity.CategoryCode, entity.CategoryName));
     }
 
-    /// <inheritdoc />
     public async Task<Result> DeleteCategoryAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id && !c.DeleteFlag, cancellationToken);

@@ -1,66 +1,14 @@
+namespace ModuPOS.Inventory.Services;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Inventory.DTOs;
+using ModuPOS.Inventory.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Inventory.Services.Product;
-
-/// <summary>
-/// Defines business operations for managing products and catalog inventory.
-/// </summary>
-public interface IProductService
-{
-    /// <summary>
-    /// Retrieves a paginated list of non-deleted products with optional filtering.
-    /// </summary>
-    /// <param name="categoryId">Optional category identifier filter.</param>
-    /// <param name="search">Optional name or product code keyword.</param>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of product response DTOs.</returns>
-    Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId = null, string? search = null, PaginationRequest? request = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a product by its identifier.
-    /// </summary>
-    /// <param name="id">The product primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The product response DTO if found; otherwise failure.</returns>
-    Task<Result<ProductResponseDto>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new product.
-    /// </summary>
-    /// <param name="request">The product creation request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created product response DTO if successful; otherwise failure.</returns>
-    Task<Result<ProductResponseDto>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing product.
-    /// </summary>
-    /// <param name="id">The product primary key.</param>
-    /// <param name="request">The product update details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated product response DTO if successful; otherwise failure.</returns>
-    Task<Result<ProductResponseDto>> UpdateProductAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Soft-deletes a product by setting its DeleteFlag to true.
-    /// </summary>
-    /// <param name="id">The product primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<Result> DeleteProductAsync(int id, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core implementation for <see cref="IProductService"/>.
-/// </summary>
 public class ProductService(AppDbContext context) : IProductService
 {
-    /// <inheritdoc />
     public async Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId = null, string? search = null, PaginationRequest? request = null, CancellationToken cancellationToken = default)
     {
         request ??= new PaginationRequest();
@@ -104,7 +52,6 @@ public class ProductService(AppDbContext context) : IProductService
         return PagedResult<ProductResponseDto>.Success(items, pagination);
     }
 
-    /// <inheritdoc />
     public async Task<Result<ProductResponseDto>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var p = await context.Products
@@ -127,7 +74,6 @@ public class ProductService(AppDbContext context) : IProductService
             p.ProductId, p.ProductCode, p.CategoryId, p.Name, p.Price, p.Quantity, p.ImageUrl, p.CreatedAt, categoryName));
     }
 
-    /// <inheritdoc />
     public async Task<Result<ProductResponseDto>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.ProductCode) || string.IsNullOrWhiteSpace(request.Name))
@@ -146,7 +92,7 @@ public class ProductService(AppDbContext context) : IProductService
                 return Result<ProductResponseDto>.Failure("Specified category does not exist.");
         }
 
-        var entity = new ModuPOS.Database.AppDbContextModels.Product
+        var entity = new Product
         {
             ProductCode = request.ProductCode,
             CategoryId = request.CategoryId,
@@ -166,7 +112,6 @@ public class ProductService(AppDbContext context) : IProductService
             entity.ProductId, entity.ProductCode, entity.CategoryId, entity.Name, entity.Price, entity.Quantity, entity.ImageUrl, entity.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result<ProductResponseDto>> UpdateProductAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
@@ -200,7 +145,6 @@ public class ProductService(AppDbContext context) : IProductService
             entity.ProductId, entity.ProductCode, entity.CategoryId, entity.Name, entity.Price, entity.Quantity, entity.ImageUrl, entity.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
