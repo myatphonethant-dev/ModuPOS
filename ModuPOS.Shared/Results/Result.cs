@@ -1,31 +1,36 @@
 namespace ModuPOS.Shared.Results;
 
-/// <summary>A stable, client-visible failure: <paramref name="Code"/> is part of the API contract.</summary>
-public sealed record Error(
-    string Code,
-    string Message,
-    int Status,
-    IReadOnlyDictionary<string, object?>? Extensions = null);
-
-public readonly struct Result<T>
+public class Result
 {
-    private Result(T? value, Error? error)
+    public bool IsSuccess { get; }
+    public string? ErrorMessage { get; }
+    public bool IsFailure => !IsSuccess;
+
+    protected Result(bool isSuccess, string? errorMessage)
     {
-        Value = value;
-        Error = error;
+        IsSuccess = isSuccess;
+        ErrorMessage = errorMessage;
     }
 
-    public T? Value { get; }
+    public static Result Success() => new(true, null);
+    public static Result Failure(string errorMessage) => new(false, errorMessage);
 
-    public Error? Error { get; }
+    public static Result<T> Success<T>(T data) => Result<T>.Success(data);
+    public static Result<T> Failure<T>(string errorMessage) => Result<T>.Failure(errorMessage);
+}
 
-    public bool IsSuccess => Error is null;
+public class Result<T> : Result
+{
+    public T? Data { get; }
 
-    public static Result<T> Ok(T value) => new(value, null);
+    private Result(bool isSuccess, T? data, string? errorMessage)
+        : base(isSuccess, errorMessage)
+    {
+        Data = data;
+    }
 
-    public static Result<T> Fail(Error error) => new(default, error);
+    public static Result<T> Success(T data) => new(true, data, null);
+    public new static Result<T> Failure(string errorMessage) => new(false, default, errorMessage);
 
-    public static implicit operator Result<T>(T value) => Ok(value);
-
-    public static implicit operator Result<T>(Error error) => Fail(error);
+    public static implicit operator Result<T>(T data) => Success(data);
 }
