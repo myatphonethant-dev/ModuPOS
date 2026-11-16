@@ -8,9 +8,9 @@ public static class FeatureDependencyRegistry
     {
         [FeatureCodes.Auth] = [],
 
-        [FeatureCodes.Loyalty] = [ FeatureCodes.Sale ],
+        [FeatureCodes.Loyalty] = [FeatureCodes.Sale],
 
-        [FeatureCodes.Reporting] = [ FeatureCodes.Sale ]
+        [FeatureCodes.Reporting] = [FeatureCodes.Sale]
     };
 
     public static IReadOnlyList<string> GetDependencies(string featureCode)
