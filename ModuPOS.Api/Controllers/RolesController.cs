@@ -30,11 +30,14 @@ public class RolesController(IRoleService roleService) : ControllerBase
         return result.IsSuccess ? CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result) : BadRequest(result);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPatch("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
     {
         var result = await roleService.UpdateRoleAsync(id, request, ct);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        if (result.IsSuccess)
+            return Ok(result);
+
+        return result.Message == "Role not found." ? NotFound(result) : BadRequest(result);
     }
 
     [HttpDelete("{id:int}")]

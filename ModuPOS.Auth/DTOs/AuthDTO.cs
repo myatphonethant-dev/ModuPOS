@@ -44,6 +44,9 @@ public record RoleDto(
 
 public record CreateRoleRequest(string Name, List<int>? PermissionIds = null);
 
-public record UpdateRoleRequest(string Name, List<int>? PermissionIds = null);
+public record UpdateRoleRequest(
+    string? Name = null,
+    List<int>? PermissionIdsToAdd = null,
+    List<int>? PermissionIdsToRemove = null);
 
 public record PermissionDto(int Id, string Name);

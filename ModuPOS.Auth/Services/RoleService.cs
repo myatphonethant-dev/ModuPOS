@@ -119,46 +119,87 @@ public class RoleService(AppDbContext context) : IRoleService
         if (role is null)
             return Result<RoleDto>.Failure("Role not found.");
 
-        var nameInUse = await context.Roles.AnyAsync(r => r.Id != id && r.Name == request.Name && !r.IsDeleted, cancellationToken);
-        if (nameInUse)
-            return Result<RoleDto>.Failure($"Role '{request.Name}' already exists.");
+        var idsToAdd = (request.PermissionIdsToAdd ?? [])
+            .Distinct()
+            .ToList();
+        var idsToRemove = (request.PermissionIdsToRemove ?? [])
+            .Distinct()
+            .ToList();
 
-        role.Name = request.Name;
+        var overlappingIds = idsToAdd.Intersect(idsToRemove).ToList();
+        if (overlappingIds.Count > 0)
+            return Result<RoleDto>.Failure("Permission IDs cannot appear in both add and remove lists.");
 
-        var existingPerms = await context.RolePermissions
-            .Where(rp => rp.RoleId == id && !rp.IsDeleted)
-            .ToListAsync(cancellationToken);
-
-        foreach (var rp in existingPerms)
+        if (request.Name is not null)
         {
-            rp.IsDeleted = true;
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return Result<RoleDto>.Failure("Role name is required.");
+
+            var name = request.Name.Trim();
+            var nameInUse = await context.Roles.AnyAsync(
+                r => r.Id != id && r.Name == name && !r.IsDeleted,
+                cancellationToken);
+            if (nameInUse)
+                return Result<RoleDto>.Failure($"Role '{name}' already exists.");
+
+            role.Name = name;
         }
 
-        var permissionIds = new List<int>();
-        var permissionNames = new List<string>();
-
-        if (request.PermissionIds is { Count: > 0 })
+        if (idsToAdd.Count > 0 || idsToRemove.Count > 0)
         {
-            var validPerms = await context.Permissions
-                .Where(p => request.PermissionIds.Contains(p.Id) && !p.IsDeleted)
+            if (idsToAdd.Count > 0)
+            {
+                var validAddCount = await context.Permissions
+                    .CountAsync(p => idsToAdd.Contains(p.Id) && !p.IsDeleted, cancellationToken);
+                if (validAddCount != idsToAdd.Count)
+                    return Result<RoleDto>.Failure("One or more permissions to add were not found.");
+            }
+
+            if (idsToRemove.Count > 0)
+            {
+                var validRemoveCount = await context.Permissions
+                    .CountAsync(p => idsToRemove.Contains(p.Id) && !p.IsDeleted, cancellationToken);
+                if (validRemoveCount != idsToRemove.Count)
+                    return Result<RoleDto>.Failure("One or more permissions to remove were not found.");
+            }
+
+            var existingLinks = await context.RolePermissions
+                .Where(rp => rp.RoleId == id)
                 .ToListAsync(cancellationToken);
 
-            foreach (var perm in validPerms)
+            foreach (var permissionId in idsToRemove)
             {
+                foreach (var link in existingLinks.Where(rp => rp.PermissionId == permissionId && !rp.IsDeleted))
+                {
+                    link.IsDeleted = true;
+                }
+            }
+
+            foreach (var permissionId in idsToAdd)
+            {
+                var activeLink = existingLinks.FirstOrDefault(rp => rp.PermissionId == permissionId && !rp.IsDeleted);
+                if (activeLink is not null)
+                    continue;
+
+                var softDeletedLink = existingLinks.FirstOrDefault(rp => rp.PermissionId == permissionId && rp.IsDeleted);
+                if (softDeletedLink is not null)
+                {
+                    softDeletedLink.IsDeleted = false;
+                    continue;
+                }
+
                 context.RolePermissions.Add(new RolePermission
                 {
                     RoleId = role.Id,
-                    PermissionId = perm.Id,
+                    PermissionId = permissionId,
                     IsDeleted = false
                 });
-                permissionIds.Add(perm.Id);
-                permissionNames.Add(perm.Name);
             }
         }
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result<RoleDto>.Success(new RoleDto(role.Id, role.Name, permissionIds, permissionNames));
+        return await GetRoleByIdAsync(id, cancellationToken);
     }
 
     public async Task<Result> DeleteRoleAsync(int id, CancellationToken cancellationToken = default)
