@@ -1,23 +1,69 @@
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Organization.DTOs;
+using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
 namespace ModuPOS.Organization.Services.Staff;
 
+/// <summary>
+/// Defines business operations for managing staff members.
+/// </summary>
 public interface IStaffService
 {
-    Task<Result<List<StaffResponseDto>>> GetStaffListAsync(string? branchCode = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Retrieves a paginated list of non-deleted staff members with an optional branch filter.
+    /// </summary>
+    /// <param name="branchCode">Optional branch code filter.</param>
+    /// <param name="request">The pagination parameters.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paginated list of staff response DTOs.</returns>
+    Task<PagedResult<StaffResponseDto>> GetStaffListAsync(string? branchCode = null, PaginationRequest? request = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a staff member by identifier.
+    /// </summary>
+    /// <param name="id">The staff primary key.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The staff response DTO if found; otherwise failure.</returns>
     Task<Result<StaffResponseDto>> GetStaffByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a new staff record.
+    /// </summary>
+    /// <param name="request">The staff creation details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created staff response DTO if successful; otherwise failure.</returns>
     Task<Result<StaffResponseDto>> CreateStaffAsync(CreateStaffRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates an existing staff record.
+    /// </summary>
+    /// <param name="id">The staff primary key.</param>
+    /// <param name="request">The staff update details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated staff response DTO if successful; otherwise failure.</returns>
     Task<Result<StaffResponseDto>> UpdateStaffAsync(int id, UpdateStaffRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Soft-deletes a staff record by setting DeleteFlag to true.
+    /// </summary>
+    /// <param name="id">The staff primary key.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result indicating success or failure.</returns>
     Task<Result> DeleteStaffAsync(int id, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Provides EF Core implementation for <see cref="IStaffService"/>.
+/// </summary>
 public class StaffService(AppDbContext context) : IStaffService
 {
-    public async Task<Result<List<StaffResponseDto>>> GetStaffListAsync(string? branchCode = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task<PagedResult<StaffResponseDto>> GetStaffListAsync(string? branchCode = null, PaginationRequest? request = null, CancellationToken cancellationToken = default)
     {
+        request ??= new PaginationRequest();
+
         var query = context.Staff
             .AsNoTracking()
             .Where(s => !s.DeleteFlag);
@@ -25,14 +71,21 @@ public class StaffService(AppDbContext context) : IStaffService
         if (!string.IsNullOrWhiteSpace(branchCode))
             query = query.Where(s => s.BranchCode == branchCode);
 
-        var staffList = await query
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderBy(s => s.StaffId)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(s => new StaffResponseDto(
                 s.StaffId, s.StaffCode, s.StaffName, s.DateOfBirth, s.Phone, s.Email, s.Address, s.BranchCode, s.IsActive, s.CreatedAt))
             .ToListAsync(cancellationToken);
 
-        return Result.Success(staffList);
+        var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
+        return PagedResult<StaffResponseDto>.Success(items, pagination);
     }
 
+    /// <inheritdoc />
     public async Task<Result<StaffResponseDto>> GetStaffByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var s = await context.Staff
@@ -40,20 +93,21 @@ public class StaffService(AppDbContext context) : IStaffService
             .FirstOrDefaultAsync(x => x.StaffId == id && !x.DeleteFlag, cancellationToken);
 
         if (s is null)
-            return Result.Failure<StaffResponseDto>("Staff not found.");
+            return Result<StaffResponseDto>.Failure("Staff not found.");
 
-        return Result.Success(new StaffResponseDto(
+        return Result<StaffResponseDto>.Success(new StaffResponseDto(
             s.StaffId, s.StaffCode, s.StaffName, s.DateOfBirth, s.Phone, s.Email, s.Address, s.BranchCode, s.IsActive, s.CreatedAt));
     }
 
+    /// <inheritdoc />
     public async Task<Result<StaffResponseDto>> CreateStaffAsync(CreateStaffRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.StaffCode) || string.IsNullOrWhiteSpace(request.StaffName))
-            return Result.Failure<StaffResponseDto>("Staff code and name are required.");
+            return Result<StaffResponseDto>.Failure("Staff code and name are required.");
 
         var exists = await context.Staff.AnyAsync(s => s.StaffCode == request.StaffCode && !s.DeleteFlag, cancellationToken);
         if (exists)
-            return Result.Failure<StaffResponseDto>($"Staff with code '{request.StaffCode}' already exists.");
+            return Result<StaffResponseDto>.Failure($"Staff with code '{request.StaffCode}' already exists.");
 
         var entity = new ModuPOS.Database.AppDbContextModels.Staff
         {
@@ -73,15 +127,16 @@ public class StaffService(AppDbContext context) : IStaffService
         context.Staff.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new StaffResponseDto(
+        return Result<StaffResponseDto>.Success(new StaffResponseDto(
             entity.StaffId, entity.StaffCode, entity.StaffName, entity.DateOfBirth, entity.Phone, entity.Email, entity.Address, entity.BranchCode, entity.IsActive, entity.CreatedAt));
     }
 
+    /// <inheritdoc />
     public async Task<Result<StaffResponseDto>> UpdateStaffAsync(int id, UpdateStaffRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.Staff.FirstOrDefaultAsync(s => s.StaffId == id && !s.DeleteFlag, cancellationToken);
         if (entity is null)
-            return Result.Failure<StaffResponseDto>("Staff not found.");
+            return Result<StaffResponseDto>.Failure("Staff not found.");
 
         entity.StaffName = request.StaffName;
         entity.DateOfBirth = request.DateOfBirth;
@@ -95,10 +150,11 @@ public class StaffService(AppDbContext context) : IStaffService
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new StaffResponseDto(
+        return Result<StaffResponseDto>.Success(new StaffResponseDto(
             entity.StaffId, entity.StaffCode, entity.StaffName, entity.DateOfBirth, entity.Phone, entity.Email, entity.Address, entity.BranchCode, entity.IsActive, entity.CreatedAt));
     }
 
+    /// <inheritdoc />
     public async Task<Result> DeleteStaffAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await context.Staff.FirstOrDefaultAsync(s => s.StaffId == id && !s.DeleteFlag, cancellationToken);
@@ -109,6 +165,6 @@ public class StaffService(AppDbContext context) : IStaffService
         entity.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return Result.Success("Staff deleted successfully.");
     }
 }
