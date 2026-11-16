@@ -67,3 +67,13 @@ Before reporting implementation complete:
 6. Report the files and behavior changed, validation performed, remaining risks, and any work requiring human attention.
 
 Agent self-review supplements but never replaces human code review. Stop after presenting the working-tree changes unless the user explicitly authorizes a subsequent Git or publication action.
+
+# Commit attribution
+
+Use the selected person's verified Git name and email. If identity is not available from repository history, ask for it. Authentication tokens do not determine commit authorship. Do not change global Git identity settings. Never add an agent as a contributor.
+
+Keep SECRETS.md local and ignored by Git. Never stage, commit, print, or copy its credentials into tracked files or commit messages.
+
+# Commit messages
+
+Use Conventional Commit messages in the form `type(scope): description`, such as `fix(docker): restore local database connectivity` or `docs(workdlow): define commit convention `. Keep each task in a separate commit, grouping only changes needed for that task.
