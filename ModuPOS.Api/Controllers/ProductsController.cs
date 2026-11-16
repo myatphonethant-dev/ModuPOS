@@ -10,9 +10,16 @@ using ModuPOS.Shared.Pagination;
 public class ProductsController(IProductService productService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? categoryId, [FromQuery] string? search, [FromQuery] PaginationRequest request, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] GetProductsRequest request, CancellationToken ct)
     {
-        var result = await productService.GetProductsAsync(categoryId, search, request, ct);
+        var result = await productService.GetProductsAsync(request, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] SearchProductsRequest request, CancellationToken ct)
+    {
+        var result = await productService.SearchProductsAsync(request, ct);
         return Ok(result);
     }
 
