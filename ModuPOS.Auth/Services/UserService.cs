@@ -1,67 +1,17 @@
+namespace ModuPOS.Auth.Services;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Auth.DTOs;
+using ModuPOS.Auth.Interfaces;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Auth.Services.User;
-
-/// <summary>
-/// Defines business operations for managing user accounts and credentials.
-/// </summary>
-public interface IUserService
-{
-    /// <summary>
-    /// Retrieves a paginated list of non-deleted users.
-    /// </summary>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of user response DTOs.</returns>
-    Task<PagedResult<UserResponseDto>> GetUsersAsync(PaginationRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a user by identifier.
-    /// </summary>
-    /// <param name="id">The user primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The user response DTO if found; otherwise failure.</returns>
-    Task<Result<UserResponseDto>> GetUserByIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new user with hashed credentials.
-    /// </summary>
-    /// <param name="request">The user creation details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created user response DTO if successful; otherwise failure.</returns>
-    Task<Result<UserResponseDto>> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates user profile and role assignment.
-    /// </summary>
-    /// <param name="id">The user primary key.</param>
-    /// <param name="request">The user update details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated user response DTO if successful; otherwise failure.</returns>
-    Task<Result<UserResponseDto>> UpdateUserAsync(int id, UpdateUserRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Soft-deletes a user by setting is_deleted to true.
-    /// </summary>
-    /// <param name="id">The user primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<Result> DeleteUserAsync(int id, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core implementation for <see cref="IUserService"/>.
-/// </summary>
 public class UserService(AppDbContext context) : IUserService
 {
-    private readonly PasswordHasher<Database.AppDbContextModels.User> _passwordHasher = new();
+    private readonly PasswordHasher<User> _passwordHasher = new();
 
-    /// <inheritdoc />
     public async Task<PagedResult<UserResponseDto>> GetUsersAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var query = context.Users.AsNoTracking().Where(x => !x.IsDeleted);
@@ -83,7 +33,6 @@ public class UserService(AppDbContext context) : IUserService
         return PagedResult<UserResponseDto>.Success(items, pagination);
     }
 
-    /// <inheritdoc />
     public async Task<Result<UserResponseDto>> GetUserByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var u = await context.Users
@@ -98,7 +47,6 @@ public class UserService(AppDbContext context) : IUserService
         return Result<UserResponseDto>.Success(new UserResponseDto(u.Id, u.RoleId, u.Username, u.Email, u.IsActive, u.CreatedAt, role?.Name));
     }
 
-    /// <inheritdoc />
     public async Task<Result<UserResponseDto>> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
@@ -112,7 +60,7 @@ public class UserService(AppDbContext context) : IUserService
         if (!roleExists)
             return Result<UserResponseDto>.Failure("Specified role does not exist.");
 
-        var user = new Database.AppDbContextModels.User
+        var user = new User
         {
             Username = request.Username,
             RoleId = request.RoleId,
@@ -133,7 +81,6 @@ public class UserService(AppDbContext context) : IUserService
         return Result<UserResponseDto>.Success(new UserResponseDto(user.Id, user.RoleId, user.Username, user.Email, user.IsActive, user.CreatedAt, role?.Name));
     }
 
-    /// <inheritdoc />
     public async Task<Result<UserResponseDto>> UpdateUserAsync(int id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted, cancellationToken);
@@ -157,7 +104,6 @@ public class UserService(AppDbContext context) : IUserService
         return Result<UserResponseDto>.Success(new UserResponseDto(user.Id, user.RoleId, user.Username, user.Email, user.IsActive, user.CreatedAt, role?.Name));
     }
 
-    /// <inheritdoc />
     public async Task<Result> DeleteUserAsync(int id, CancellationToken cancellationToken = default)
     {
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted, cancellationToken);

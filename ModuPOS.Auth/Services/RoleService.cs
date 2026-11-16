@@ -1,64 +1,14 @@
+namespace ModuPOS.Auth.Services;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Auth.DTOs;
+using ModuPOS.Auth.Interfaces;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Auth.Services.Role;
-
-/// <summary>
-/// Defines business operations for managing security roles and permission mappings.
-/// </summary>
-public interface IRoleService
-{
-    /// <summary>
-    /// Retrieves a paginated list of non-deleted roles.
-    /// </summary>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of role DTOs.</returns>
-    Task<PagedResult<RoleDto>> GetRolesAsync(PaginationRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a role by its identifier including its permissions.
-    /// </summary>
-    /// <param name="id">The role primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The role DTO if found; otherwise failure.</returns>
-    Task<Result<RoleDto>> GetRoleByIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new role with optional permission assignments.
-    /// </summary>
-    /// <param name="request">The role creation details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created role DTO if successful; otherwise failure.</returns>
-    Task<Result<RoleDto>> CreateRoleAsync(CreateRoleRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing role and its permission assignments.
-    /// </summary>
-    /// <param name="id">The role primary key.</param>
-    /// <param name="request">The role update details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated role DTO if successful; otherwise failure.</returns>
-    Task<Result<RoleDto>> UpdateRoleAsync(int id, UpdateRoleRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Soft-deletes a role and its permission mappings.
-    /// </summary>
-    /// <param name="id">The role primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<Result> DeleteRoleAsync(int id, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core implementation for <see cref="IRoleService"/>.
-/// </summary>
 public class RoleService(AppDbContext context) : IRoleService
 {
-    /// <inheritdoc />
     public async Task<PagedResult<RoleDto>> GetRolesAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var query = context.Roles
@@ -96,7 +46,6 @@ public class RoleService(AppDbContext context) : IRoleService
         return PagedResult<RoleDto>.Success(list, pagination);
     }
 
-    /// <inheritdoc />
     public async Task<Result<RoleDto>> GetRoleByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var r = await context.Roles
@@ -119,7 +68,6 @@ public class RoleService(AppDbContext context) : IRoleService
             perms.Select(p => p.Name).ToList()));
     }
 
-    /// <inheritdoc />
     public async Task<Result<RoleDto>> CreateRoleAsync(CreateRoleRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -129,7 +77,7 @@ public class RoleService(AppDbContext context) : IRoleService
         if (exists)
             return Result<RoleDto>.Failure($"Role '{request.Name}' already exists.");
 
-        var role = new ModuPOS.Database.AppDbContextModels.Role
+        var role = new Role
         {
             Name = request.Name,
             IsDeleted = false
@@ -165,7 +113,6 @@ public class RoleService(AppDbContext context) : IRoleService
         return Result<RoleDto>.Success(new RoleDto(role.Id, role.Name, permissionIds, permissionNames));
     }
 
-    /// <inheritdoc />
     public async Task<Result<RoleDto>> UpdateRoleAsync(int id, UpdateRoleRequest request, CancellationToken cancellationToken = default)
     {
         var role = await context.Roles.FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted, cancellationToken);
@@ -178,7 +125,6 @@ public class RoleService(AppDbContext context) : IRoleService
 
         role.Name = request.Name;
 
-        // Soft-delete existing role permissions
         var existingPerms = await context.RolePermissions
             .Where(rp => rp.RoleId == id && !rp.IsDeleted)
             .ToListAsync(cancellationToken);
@@ -215,7 +161,6 @@ public class RoleService(AppDbContext context) : IRoleService
         return Result<RoleDto>.Success(new RoleDto(role.Id, role.Name, permissionIds, permissionNames));
     }
 
-    /// <inheritdoc />
     public async Task<Result> DeleteRoleAsync(int id, CancellationToken cancellationToken = default)
     {
         var role = await context.Roles.FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted, cancellationToken);

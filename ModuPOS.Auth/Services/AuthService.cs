@@ -1,3 +1,5 @@
+namespace ModuPOS.Auth.Services;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -7,50 +9,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ModuPOS.Auth.DTOs;
+using ModuPOS.Auth.Interfaces;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Shared.Results;
 using UserEntity = ModuPOS.Database.AppDbContextModels.User;
 
-namespace ModuPOS.Auth.Services.Auth;
-
-/// <summary>
-/// Defines authentication and session lifecycle management operations.
-/// </summary>
-public interface IAuthService
-{
-    /// <summary>
-    /// Authenticates user credentials and generates access and refresh tokens.
-    /// </summary>
-    /// <param name="request">The login credentials.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A login response with tokens if successful; otherwise failure.</returns>
-    Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Renews an expired access token using a valid, non-revoked refresh token.
-    /// </summary>
-    /// <param name="request">The refresh token request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A new token pair if valid; otherwise failure.</returns>
-    Task<Result<LoginResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Revokes an active refresh token, terminating the session.
-    /// </summary>
-    /// <param name="refreshToken">The refresh token string.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A result indicating revocation outcome.</returns>
-    Task<Result> RevokeTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core and JWT implementation for <see cref="IAuthService"/>.
-/// </summary>
 public class AuthService(AppDbContext context, IConfiguration configuration) : IAuthService
 {
     private readonly PasswordHasher<UserEntity> _passwordHasher = new();
 
-    /// <inheritdoc />
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
@@ -69,7 +36,6 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         return await GenerateTokenPairAsync(user, cancellationToken);
     }
 
-    /// <inheritdoc />
     public async Task<Result<LoginResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
@@ -92,7 +58,6 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         return await GenerateTokenPairAsync(user, cancellationToken);
     }
 
-    /// <inheritdoc />
     public async Task<Result> RevokeTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
         var tokenRecord = await context.RefreshTokens
