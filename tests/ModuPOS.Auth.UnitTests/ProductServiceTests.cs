@@ -90,10 +90,10 @@ public class ProductServiceTests
         await context.SaveChangesAsync();
 
         var service = new ProductService(context);
-        var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
+        var request = new GetProductsRequest { PageNumber = 2, PageSize = 10 };
 
         // Act
-        var result = await service.GetProductsAsync(request: request);
+        var result = await service.GetProductsAsync(request);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -135,15 +135,179 @@ public class ProductServiceTests
         await context.SaveChangesAsync();
 
         var service = new ProductService(context);
-        var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+        var request = new GetProductsRequest { PageNumber = 1, PageSize = 10 };
 
         // Act
-        var result = await service.GetProductsAsync(request: request);
+        var result = await service.GetProductsAsync(request);
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Single(result.Data);
         Assert.Equal("ACT01", result.Data[0].ProductCode);
         Assert.DoesNotContain(result.Data, p => p.ProductCode == "DEL01");
+    }
+
+    [Fact]
+    public async Task GetProductsAsync_WithCategoryIdFilter_ReturnsFilteredProducts()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        context.Categories.Add(new Category { CategoryId = 1, CategoryCode = "CAT01", CategoryName = "Beverages", DeleteFlag = false });
+        context.Categories.Add(new Category { CategoryId = 2, CategoryCode = "CAT02", CategoryName = "Snacks", DeleteFlag = false });
+        context.Products.Add(new Product
+        {
+            ProductId = 1,
+            ProductCode = "P001",
+            Name = "Coke",
+            CategoryId = 1,
+            Price = 1000m,
+            Quantity = 10m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        context.Products.Add(new Product
+        {
+            ProductId = 2,
+            ProductCode = "P002",
+            Name = "Chips",
+            CategoryId = 2,
+            Price = 800m,
+            Quantity = 15m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var service = new ProductService(context);
+        var request = new GetProductsRequest { CategoryId = 1, PageNumber = 1, PageSize = 10 };
+
+        // Act
+        var result = await service.GetProductsAsync(request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Data);
+        Assert.Equal("P001", result.Data[0].ProductCode);
+        Assert.Equal("Beverages", result.Data[0].CategoryName);
+    }
+
+    [Fact]
+    public async Task SearchProductsAsync_MatchingNameOrCode_ReturnsPagedResults()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        context.Products.Add(new Product
+        {
+            ProductId = 1,
+            ProductCode = "DRK001",
+            Name = "Orange Juice",
+            Price = 2000m,
+            Quantity = 10m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        context.Products.Add(new Product
+        {
+            ProductId = 2,
+            ProductCode = "SNK002",
+            Name = "Orange Candy",
+            Price = 500m,
+            Quantity = 25m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        context.Products.Add(new Product
+        {
+            ProductId = 3,
+            ProductCode = "OTH003",
+            Name = "Mineral Water",
+            Price = 500m,
+            Quantity = 50m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var service = new ProductService(context);
+        var request = new SearchProductsRequest { Query = "Orange", PageNumber = 1, PageSize = 10 };
+
+        // Act
+        var result = await service.SearchProductsAsync(request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Data.Count);
+        Assert.Equal(2, result.Pagination.TotalCount);
+        Assert.Contains(result.Data, p => p.ProductCode == "DRK001");
+        Assert.Contains(result.Data, p => p.ProductCode == "SNK002");
+    }
+
+    [Fact]
+    public async Task SearchProductsAsync_NoMatch_ReturnsEmptyPagedResult()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        context.Products.Add(new Product
+        {
+            ProductId = 1,
+            ProductCode = "P001",
+            Name = "Green Tea",
+            Price = 1200m,
+            Quantity = 10m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var service = new ProductService(context);
+        var request = new SearchProductsRequest { Query = "Coffee", PageNumber = 1, PageSize = 10 };
+
+        // Act
+        var result = await service.SearchProductsAsync(request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data);
+        Assert.Equal(0, result.Pagination.TotalCount);
+    }
+
+    [Fact]
+    public async Task SearchProductsAsync_ExcludesSoftDeletedProducts()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        context.Products.Add(new Product
+        {
+            ProductId = 1,
+            ProductCode = "SRCH01",
+            Name = "Active Match",
+            Price = 1000m,
+            Quantity = 5m,
+            DeleteFlag = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        context.Products.Add(new Product
+        {
+            ProductId = 2,
+            ProductCode = "SRCH02",
+            Name = "Deleted Match",
+            Price = 1000m,
+            Quantity = 0m,
+            DeleteFlag = true,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var service = new ProductService(context);
+        var request = new SearchProductsRequest { Query = "Match", PageNumber = 1, PageSize = 10 };
+
+        // Act
+        var result = await service.SearchProductsAsync(request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Data);
+        Assert.Equal("SRCH01", result.Data[0].ProductCode);
+        Assert.DoesNotContain(result.Data, p => p.ProductCode == "SRCH02");
     }
 }

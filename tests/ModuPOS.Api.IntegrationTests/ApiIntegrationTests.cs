@@ -69,7 +69,24 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var content = await response.Content.ReadFromJsonAsync<PagedResult<ProductResponseDto>>();
+        var content = await response.Content.ReadFromJsonAsync<PagedResult<GetProductsResponse>>();
+        Assert.NotNull(content);
+        Assert.True(content.IsSuccess);
+        Assert.NotNull(content.Pagination);
+    }
+
+    [Fact]
+    public async Task SearchProducts_ReturnsSuccessAndPagedEnvelope()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/products/search?query=Coca&pageNumber=1&pageSize=10");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var content = await response.Content.ReadFromJsonAsync<PagedResult<SearchProductsResponse>>();
         Assert.NotNull(content);
         Assert.True(content.IsSuccess);
         Assert.NotNull(content.Pagination);
