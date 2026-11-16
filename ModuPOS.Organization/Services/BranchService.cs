@@ -1,56 +1,14 @@
+namespace ModuPOS.Organization.Services;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Organization.DTOs;
+using ModuPOS.Organization.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Organization.Services.Branch;
-
-/// <summary>
-/// Defines business operations for managing store branches.
-/// </summary>
-public interface IBranchService
-{
-    /// <summary>
-    /// Retrieves a paginated list of branches.
-    /// </summary>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of branch response DTOs.</returns>
-    Task<PagedResult<BranchResponseDto>> GetBranchesAsync(PaginationRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a branch by its identifier.
-    /// </summary>
-    /// <param name="id">The branch primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The branch response DTO if found; otherwise failure.</returns>
-    Task<Result<BranchResponseDto>> GetBranchByIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new branch.
-    /// </summary>
-    /// <param name="request">The branch creation details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created branch response DTO if successful; otherwise failure.</returns>
-    Task<Result<BranchResponseDto>> CreateBranchAsync(CreateBranchRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing branch.
-    /// </summary>
-    /// <param name="id">The branch primary key.</param>
-    /// <param name="request">The branch update details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated branch response DTO if successful; otherwise failure.</returns>
-    Task<Result<BranchResponseDto>> UpdateBranchAsync(int id, UpdateBranchRequest request, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core implementation for <see cref="IBranchService"/>.
-/// </summary>
 public class BranchService(AppDbContext context) : IBranchService
 {
-    /// <inheritdoc />
     public async Task<PagedResult<BranchResponseDto>> GetBranchesAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var query = context.Branches.AsNoTracking();
@@ -68,7 +26,6 @@ public class BranchService(AppDbContext context) : IBranchService
         return PagedResult<BranchResponseDto>.Success(items, pagination);
     }
 
-    /// <inheritdoc />
     public async Task<Result<BranchResponseDto>> GetBranchByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var b = await context.Branches
@@ -81,7 +38,6 @@ public class BranchService(AppDbContext context) : IBranchService
         return Result<BranchResponseDto>.Success(new BranchResponseDto(b.BranchId, b.BranchCode, b.BranchName, b.Address, b.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result<BranchResponseDto>> CreateBranchAsync(CreateBranchRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.BranchCode) || string.IsNullOrWhiteSpace(request.BranchName))
@@ -91,7 +47,7 @@ public class BranchService(AppDbContext context) : IBranchService
         if (exists)
             return Result<BranchResponseDto>.Failure($"Branch with code '{request.BranchCode}' already exists.");
 
-        var entity = new ModuPOS.Database.AppDbContextModels.Branch
+        var entity = new Branch
         {
             BranchCode = request.BranchCode,
             BranchName = request.BranchName,
@@ -106,7 +62,6 @@ public class BranchService(AppDbContext context) : IBranchService
         return Result<BranchResponseDto>.Success(new BranchResponseDto(entity.BranchId, entity.BranchCode, entity.BranchName, entity.Address, entity.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result<BranchResponseDto>> UpdateBranchAsync(int id, UpdateBranchRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.Branches.FirstOrDefaultAsync(b => b.BranchId == id, cancellationToken);

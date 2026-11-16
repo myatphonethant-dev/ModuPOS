@@ -1,73 +1,14 @@
+namespace ModuPOS.Organization.Services;
+
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Organization.DTOs;
+using ModuPOS.Organization.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-namespace ModuPOS.Organization.Services.Shift;
-
-/// <summary>
-/// Defines business operations for managing work shifts and staff shift assignments.
-/// </summary>
-public interface IShiftService
-{
-    /// <summary>
-    /// Retrieves a paginated list of operational shifts.
-    /// </summary>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of shift response DTOs.</returns>
-    Task<PagedResult<ShiftResponseDto>> GetShiftsAsync(PaginationRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a single shift by its identifier.
-    /// </summary>
-    /// <param name="id">The shift primary key.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The shift response DTO if found; otherwise failure.</returns>
-    Task<Result<ShiftResponseDto>> GetShiftByIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new operational shift.
-    /// </summary>
-    /// <param name="request">The shift creation details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created shift response DTO if successful; otherwise failure.</returns>
-    Task<Result<ShiftResponseDto>> CreateShiftAsync(CreateShiftRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing operational shift.
-    /// </summary>
-    /// <param name="id">The shift primary key.</param>
-    /// <param name="request">The shift update details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated shift response DTO if successful; otherwise failure.</returns>
-    Task<Result<ShiftResponseDto>> UpdateShiftAsync(int id, UpdateShiftRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Assigns a staff member to an operational work shift.
-    /// </summary>
-    /// <param name="request">The staff shift assignment request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The assignment response DTO if successful; otherwise failure.</returns>
-    Task<Result<StaffShiftResponseDto>> AssignStaffShiftAsync(AssignStaffShiftRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a paginated list of staff shift assignments with an optional shift filter.
-    /// </summary>
-    /// <param name="shiftCode">Optional shift code filter.</param>
-    /// <param name="request">The pagination parameters.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of staff shift assignment DTOs.</returns>
-    Task<PagedResult<StaffShiftResponseDto>> GetStaffShiftsAsync(string? shiftCode = null, PaginationRequest? request = null, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Provides EF Core implementation for <see cref="IShiftService"/>.
-/// </summary>
 public class ShiftService(AppDbContext context) : IShiftService
 {
-    /// <inheritdoc />
     public async Task<PagedResult<ShiftResponseDto>> GetShiftsAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var query = context.Shifts.AsNoTracking();
@@ -85,7 +26,6 @@ public class ShiftService(AppDbContext context) : IShiftService
         return PagedResult<ShiftResponseDto>.Success(items, pagination);
     }
 
-    /// <inheritdoc />
     public async Task<Result<ShiftResponseDto>> GetShiftByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var s = await context.Shifts
@@ -98,7 +38,6 @@ public class ShiftService(AppDbContext context) : IShiftService
         return Result<ShiftResponseDto>.Success(new ShiftResponseDto(s.ShiftId, s.ShiftCode, s.ShiftType, s.ShiftStartTime, s.ShiftEndTime, s.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result<ShiftResponseDto>> CreateShiftAsync(CreateShiftRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.ShiftCode))
@@ -108,7 +47,7 @@ public class ShiftService(AppDbContext context) : IShiftService
         if (exists)
             return Result<ShiftResponseDto>.Failure($"Shift with code '{request.ShiftCode}' already exists.");
 
-        var entity = new ModuPOS.Database.AppDbContextModels.Shift
+        var entity = new Shift
         {
             ShiftCode = request.ShiftCode,
             ShiftType = request.ShiftType,
@@ -124,7 +63,6 @@ public class ShiftService(AppDbContext context) : IShiftService
         return Result<ShiftResponseDto>.Success(new ShiftResponseDto(entity.ShiftId, entity.ShiftCode, entity.ShiftType, entity.ShiftStartTime, entity.ShiftEndTime, entity.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result<ShiftResponseDto>> UpdateShiftAsync(int id, UpdateShiftRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.Shifts.FirstOrDefaultAsync(s => s.ShiftId == id, cancellationToken);
@@ -142,7 +80,6 @@ public class ShiftService(AppDbContext context) : IShiftService
         return Result<ShiftResponseDto>.Success(new ShiftResponseDto(entity.ShiftId, entity.ShiftCode, entity.ShiftType, entity.ShiftStartTime, entity.ShiftEndTime, entity.CreatedAt));
     }
 
-    /// <inheritdoc />
     public async Task<Result<StaffShiftResponseDto>> AssignStaffShiftAsync(AssignStaffShiftRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.StaffShiftCode) || string.IsNullOrWhiteSpace(request.StaffCode) || string.IsNullOrWhiteSpace(request.ShiftCode))
@@ -160,7 +97,7 @@ public class ShiftService(AppDbContext context) : IShiftService
         if (assignmentExists)
             return Result<StaffShiftResponseDto>.Failure($"Staff shift assignment '{request.StaffShiftCode}' already exists.");
 
-        var entity = new ModuPOS.Database.AppDbContextModels.StaffShift
+        var entity = new StaffShift
         {
             StaffShiftCode = request.StaffShiftCode,
             StaffCode = request.StaffCode,
@@ -173,7 +110,6 @@ public class ShiftService(AppDbContext context) : IShiftService
         return Result<StaffShiftResponseDto>.Success(new StaffShiftResponseDto(entity.StaffShiftId, entity.StaffShiftCode, entity.StaffCode, entity.ShiftCode));
     }
 
-    /// <inheritdoc />
     public async Task<PagedResult<StaffShiftResponseDto>> GetStaffShiftsAsync(string? shiftCode = null, PaginationRequest? request = null, CancellationToken cancellationToken = default)
     {
         request ??= new PaginationRequest();
