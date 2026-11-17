@@ -107,8 +107,17 @@
   ```
 - **Response**: `201 Created` with `Result<RoleDto>` or `400 Bad Request`
 
-### `PUT /api/roles/{id}`
-- **Response**: `200 OK` with `Result<RoleDto>` or `404 Not Found`
+### `PATCH /api/roles/{id}`
+- **Description**: Partially updates a role. Omit `name` to leave it unchanged. Permission changes are additive/removal patches (not a full replace). Soft-deleted role-permission links are revived when re-added.
+- **Request Body**:
+  ```json
+  {
+    "name": "Supervisor",
+    "permissionIdsToAdd": [3, 4],
+    "permissionIdsToRemove": [1]
+  }
+  ```
+- **Response**: `200 OK` with `Result<RoleDto>` containing the full effective permission set, `404 Not Found` when the role is missing, or `400 Bad Request` for validation failures (unknown permission IDs, overlapping add/remove IDs, blank name, duplicate name).
 
 ### `DELETE /api/roles/{id}`
 - **Description**: Soft-deletes role and related role-permissions (`is_deleted = 1`).
