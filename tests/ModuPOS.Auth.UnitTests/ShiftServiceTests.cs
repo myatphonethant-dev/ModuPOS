@@ -23,7 +23,14 @@ public class ShiftServiceTests
         // Arrange
         await using var context = CreateContext();
         var service = new ShiftService(context);
-        var request = new CreateShiftRequest("MORN-01", "Morning", DateTime.UtcNow, DateTime.UtcNow.AddHours(8), "admin");
+        var request = new CreateShiftRequest
+        {
+            ShiftCode = "MORN-01",
+            ShiftType = "Morning",
+            ShiftStartTime = DateTime.UtcNow,
+            ShiftEndTime = DateTime.UtcNow.AddHours(8),
+            CreatedBy = "admin"
+        };
 
         // Act
         var result = await service.CreateShiftAsync(request);
@@ -62,7 +69,12 @@ public class ShiftServiceTests
         await context.SaveChangesAsync();
 
         var service = new ShiftService(context);
-        var request = new AssignStaffShiftRequest("SS-001", "STF-001", "MORN-01");
+        var request = new AssignStaffShiftRequest
+        {
+            StaffShiftCode = "SS-001",
+            StaffCode = "STF-001",
+            ShiftCode = "MORN-01"
+        };
 
         // Act
         var result = await service.AssignStaffShiftAsync(request);
@@ -90,7 +102,12 @@ public class ShiftServiceTests
         await context.SaveChangesAsync();
 
         var service = new ShiftService(context);
-        var request = new AssignStaffShiftRequest("SS-999", "NON-EXISTENT", "MORN-01");
+        var request = new AssignStaffShiftRequest
+        {
+            StaffShiftCode = "SS-999",
+            StaffCode = "NON-EXISTENT",
+            ShiftCode = "MORN-01"
+        };
 
         // Act
         var result = await service.AssignStaffShiftAsync(request);
