@@ -23,7 +23,15 @@ public class ProductServiceTests
         // Arrange
         await using var context = CreateContext();
         var service = new ProductService(context);
-        var request = new CreateProductRequest("P001", null, "Coca Cola", 1500m, 50m, null);
+        var request = new CreateProductRequest
+        {
+            ProductCode = "P001",
+            CategoryId = null,
+            Name = "Coca Cola",
+            Price = 1500m,
+            Quantity = 50m,
+            ImageUrl = null
+        };
 
         // Act
         var result = await service.CreateProductAsync(request);
