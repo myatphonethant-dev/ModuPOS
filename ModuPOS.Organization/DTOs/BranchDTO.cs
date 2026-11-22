@@ -1,19 +1,25 @@
 namespace ModuPOS.Organization.DTOs;
 
-public record CreateBranchRequest(
-    string BranchCode,
-    string BranchName,
-    string? Address = null,
-    string? CreatedBy = null);
+public class CreateBranchRequest
+{
+    public string BranchCode { get; set; } = string.Empty;
+    public string BranchName { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public string? CreatedBy { get; set; }
+}
 
-public record UpdateBranchRequest(
-    string BranchName,
-    string? Address = null,
-    string? UpdatedBy = null);
+public class UpdateBranchRequest
+{
+    public string BranchName { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public string? UpdatedBy { get; set; }
+}
 
-public record BranchResponseDto(
-    int BranchId,
-    string BranchCode,
-    string BranchName,
-    string? Address,
-    DateTime CreatedAt);
+public sealed record BranchResponseDto
+{
+    public int BranchId { get; init; }
+    public string BranchCode { get; init; } = string.Empty;
+    public string BranchName { get; init; } = string.Empty;
+    public string? Address { get; init; }
+    public DateTime CreatedAt { get; init; }
+}

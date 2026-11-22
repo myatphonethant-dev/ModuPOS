@@ -1,34 +1,44 @@
 namespace ModuPOS.Organization.DTOs;
 
-public record CreateShiftRequest(
-    string ShiftCode,
-    string? ShiftType = null,
-    DateTime? ShiftStartTime = null,
-    DateTime? ShiftEndTime = null,
-    string? CreatedBy = null);
+public class CreateShiftRequest
+{
+    public string ShiftCode { get; set; } = string.Empty;
+    public string? ShiftType { get; set; }
+    public DateTime? ShiftStartTime { get; set; }
+    public DateTime? ShiftEndTime { get; set; }
+    public string? CreatedBy { get; set; }
+}
 
-public record UpdateShiftRequest(
-    string? ShiftType = null,
-    DateTime? ShiftStartTime = null,
-    DateTime? ShiftEndTime = null,
-    string? UpdatedBy = null);
+public class UpdateShiftRequest
+{
+    public string? ShiftType { get; set; }
+    public DateTime? ShiftStartTime { get; set; }
+    public DateTime? ShiftEndTime { get; set; }
+    public string? UpdatedBy { get; set; }
+}
 
-public record ShiftResponseDto(
-    int ShiftId,
-    string ShiftCode,
-    string? ShiftType,
-    DateTime? ShiftStartTime,
-    DateTime? ShiftEndTime,
-    DateTime CreatedAt);
+public sealed record ShiftResponseDto
+{
+    public int ShiftId { get; init; }
+    public string ShiftCode { get; init; } = string.Empty;
+    public string? ShiftType { get; init; }
+    public DateTime? ShiftStartTime { get; init; }
+    public DateTime? ShiftEndTime { get; init; }
+    public DateTime CreatedAt { get; init; }
+}
 
-public record AssignStaffShiftRequest(
-    string StaffShiftCode,
-    string StaffCode,
-    string ShiftCode);
+public class AssignStaffShiftRequest
+{
+    public string StaffShiftCode { get; set; } = string.Empty;
+    public string StaffCode { get; set; } = string.Empty;
+    public string ShiftCode { get; set; } = string.Empty;
+}
 
-public record StaffShiftResponseDto(
-    int StaffShiftId,
-    string StaffShiftCode,
-    string StaffCode,
-    string ShiftCode,
-    string? StaffName = null);
+public sealed record StaffShiftResponseDto
+{
+    public int StaffShiftId { get; init; }
+    public string StaffShiftCode { get; init; } = string.Empty;
+    public string StaffCode { get; init; } = string.Empty;
+    public string ShiftCode { get; init; } = string.Empty;
+    public string? StaffName { get; init; }
+}
