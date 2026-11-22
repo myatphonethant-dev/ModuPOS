@@ -1,93 +1,73 @@
+using ModuPOS.Shared.Pagination;
+
 namespace ModuPOS.Inventory.DTOs;
 
-public record CreateProductRequest(
-    string ProductCode,
-    int? CategoryId,
-    string Name,
-    decimal Price,
-    decimal Quantity,
-    string? ImageUrl,
-    string? CreatedBy = null);
+public class CreateProductRequest {
 
-public record UpdateProductRequest(
-    string ProductCode,
-    int? CategoryId,
-    string Name,
-    decimal Price,
-    decimal Quantity,
-    string? ImageUrl,
-    string? UpdatedBy = null);
-
-public record ProductResponseDto(
-    int ProductId,
-    string ProductCode,
-    int? CategoryId,
-    string Name,
-    decimal Price,
-    decimal Quantity,
-    string? ImageUrl,
-    DateTime CreatedAt,
-    string? CategoryName = null);
-
-public record GetProductsRequest
-{
-    private int _pageNumber = 1;
-    private int _pageSize = 10;
-
+    public string ProductCode { get; set; } = string.Empty;
     public int? CategoryId { get; set; }
-
-    public int PageNumber
-    {
-        get => _pageNumber;
-        set => _pageNumber = value < 1 ? 1 : value;
-    }
-
-    public int PageSize
-    {
-        get => _pageSize;
-        set => _pageSize = value < 1 ? 10 : (value > 100 ? 100 : value);
-    }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public decimal Quantity { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? CreatedBy { get; set; } = string.Empty;
 }
 
-public record GetProductsResponse(
-    int ProductId,
-    string ProductCode,
-    int? CategoryId,
-    string Name,
-    decimal Price,
-    decimal Quantity,
-    string? ImageUrl,
-    DateTime CreatedAt,
-    string? CategoryName = null);
+public class UpdateProductRequest {
+    public string ProductCode { get; set; } = string.Empty;
+    public int? CategoryId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public decimal Quantity { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? UpdatedBy { get; set; } = string.Empty;
+}
 
-public record SearchProductsRequest
+public sealed record ProductResponseDto
 {
-    private int _pageNumber = 1;
-    private int _pageSize = 10;
+    public int ProductId { get; init; }
+    public string ProductCode { get; init; } = string.Empty;
+    public int? CategoryId { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+    public decimal Quantity { get; init; }
+    public string? ImageUrl { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public string? CategoryName { get; init; } = string.Empty;
+    }
 
+public class GetProductsRequest : PaginationRequest
+{
+    public int? CategoryId { get; set; }
+}
+
+public sealed record GetProductsResponse {
+    public int ProductId { get; init; }
+    public string ProductCode { get; init; } = string.Empty;
+    public int? CategoryId { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+    public decimal Quantity { get; init; }
+    public string? ImageUrl { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public string? CategoryName { get; init; } = string.Empty;
+}
+
+public class SearchProductsRequest : PaginationRequest
+{
     public string? Query { get; set; }
     public int? CategoryId { get; set; }
-
-    public int PageNumber
-    {
-        get => _pageNumber;
-        set => _pageNumber = value < 1 ? 1 : value;
-    }
-
-    public int PageSize
-    {
-        get => _pageSize;
-        set => _pageSize = value < 1 ? 10 : (value > 100 ? 100 : value);
-    }
 }
 
-public record SearchProductsResponse(
-    int ProductId,
-    string ProductCode,
-    int? CategoryId,
-    string Name,
-    decimal Price,
-    decimal Quantity,
-    string? ImageUrl,
-    DateTime CreatedAt,
-    string? CategoryName = null);
+public sealed record SearchProductsResponse
+{
+    public int ProductId { get; init; }
+    public string ProductCode { get; init; } = string.Empty;
+    public int? CategoryId { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+    public decimal Quantity { get; init; }
+    public string? ImageUrl { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public string? CategoryName { get; init; } = string.Empty;
+}

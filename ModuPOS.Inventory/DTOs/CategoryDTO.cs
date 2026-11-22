@@ -1,7 +1,18 @@
 namespace ModuPOS.Inventory.DTOs;
 
-public record CreateCategoryRequest(string CategoryCode, string CategoryName);
+public class CreateCategoryRequest {
+    public string CategoryCode { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+}
 
-public record UpdateCategoryRequest(string CategoryCode, string CategoryName);
+public class UpdateCategoryRequest
+{
+    public string CategoryCode { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+}
 
-public record CategoryResponseDto(int CategoryId, string CategoryCode, string CategoryName);
+public sealed record CategoryResponseDto {
+    public int CategoryId { get; init; }
+    public string CategoryCode { get; init; } = string.Empty;
+    public string CategoryName { get; init; } = string.Empty;
+}
