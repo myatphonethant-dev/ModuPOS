@@ -13,3 +13,6 @@
 - If an API contract needs different properties than the EF Core entity, create an endpoint-specific request or response model.
 - All API endpoints and I/O-bound operations must be asynchronous, utilizing `async/await` and returning `Task<T>`.
 - API endpoints must return precise standard HTTP status codes reflecting the outcome (e.g., 200 OK, 201 Created, 400 Bad Request, 404 Not Found).
+- Use object initializers (`{ ... }`) instead of positional constructors when instantiating DTOs and response models.
+- Use traditional constructors with `private readonly` fields instead of primary constructors in services.
+- Perform consistent null checks on request parameters in services (e.g., `if (request is null) return ...Failure("Request cannot be null");`).
