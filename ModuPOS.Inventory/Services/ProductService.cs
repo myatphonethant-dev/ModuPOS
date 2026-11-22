@@ -7,13 +7,20 @@ using ModuPOS.Inventory.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-public class ProductService(AppDbContext context) : IProductService
+public class ProductService : IProductService
 {
-    public async Task<PagedResult<GetProductsResponse>> GetProductsAsync(GetProductsRequest? request = null, CancellationToken cancellationToken = default)
-    {
-        request ??= new GetProductsRequest();
+    private readonly AppDbContext _context;
 
-        var query = context.Products
+    public ProductService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<PagedResult<GetProductsResponse>> GetProductsAsync(GetProductsRequest? request, CancellationToken cancellationToken = default)
+    {
+        if (request is null) return PagedResult<GetProductsResponse>.Failure("Request cannot be null");
+
+        var query = _context.Products
             .AsNoTracking()
             .Where(p => !p.DeleteFlag);
 
@@ -24,19 +31,21 @@ public class ProductService(AppDbContext context) : IProductService
 
         var items = await (
             from p in query
-            join c in context.Categories.Where(x => !x.DeleteFlag) on p.CategoryId equals c.CategoryId into catGroup
+            join c in _context.Categories.Where(x => !x.DeleteFlag) on p.CategoryId equals c.CategoryId into catGroup
             from cat in catGroup.DefaultIfEmpty()
             orderby p.ProductId
-            select new GetProductsResponse(
-                p.ProductId,
-                p.ProductCode,
-                p.CategoryId,
-                p.Name,
-                p.Price,
-                p.Quantity,
-                p.ImageUrl,
-                p.CreatedAt,
-                cat != null ? cat.CategoryName : null)
+            select new GetProductsResponse
+            {
+                ProductId = p.ProductId,
+                ProductCode = p.ProductCode,
+                CategoryId = p.CategoryId,
+                Name = p.Name,
+                Price = p.Price,
+                Quantity = p.Quantity,
+                ImageUrl = p.ImageUrl,
+                CreatedAt = p.CreatedAt,
+                CategoryName = cat != null ? cat.CategoryName : null
+            }
         )
         .Skip((request.PageNumber - 1) * request.PageSize)
         .Take(request.PageSize)
@@ -46,11 +55,11 @@ public class ProductService(AppDbContext context) : IProductService
         return PagedResult<GetProductsResponse>.Success(items, pagination);
     }
 
-    public async Task<PagedResult<SearchProductsResponse>> SearchProductsAsync(SearchProductsRequest? request = null, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<SearchProductsResponse>> SearchProductsAsync(SearchProductsRequest? request, CancellationToken cancellationToken = default)
     {
-        request ??= new SearchProductsRequest();
+        if (request is null) return PagedResult<SearchProductsResponse>.Failure("Request cannot be null");
 
-        var query = context.Products
+        var query = _context.Products
             .AsNoTracking()
             .Where(p => !p.DeleteFlag);
 
@@ -67,19 +76,21 @@ public class ProductService(AppDbContext context) : IProductService
 
         var items = await (
             from p in query
-            join c in context.Categories.Where(x => !x.DeleteFlag) on p.CategoryId equals c.CategoryId into catGroup
+            join c in _context.Categories.Where(x => !x.DeleteFlag) on p.CategoryId equals c.CategoryId into catGroup
             from cat in catGroup.DefaultIfEmpty()
             orderby p.ProductId
-            select new SearchProductsResponse(
-                p.ProductId,
-                p.ProductCode,
-                p.CategoryId,
-                p.Name,
-                p.Price,
-                p.Quantity,
-                p.ImageUrl,
-                p.CreatedAt,
-                cat != null ? cat.CategoryName : null)
+            select new SearchProductsResponse
+            {
+                ProductId = p.ProductId,
+                ProductCode = p.ProductCode,
+                CategoryId = p.CategoryId,
+                Name = p.Name,
+                Price = p.Price,
+                Quantity = p.Quantity,
+                ImageUrl = p.ImageUrl,
+                CreatedAt = p.CreatedAt,
+                CategoryName = cat != null ? cat.CategoryName : null
+            }
         )
         .Skip((request.PageNumber - 1) * request.PageSize)
         .Take(request.PageSize)
@@ -91,7 +102,7 @@ public class ProductService(AppDbContext context) : IProductService
 
     public async Task<Result<ProductResponseDto>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var p = await context.Products
+        var p = await _context.Products
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ProductId == id && !x.DeleteFlag, cancellationToken);
 
@@ -101,14 +112,24 @@ public class ProductService(AppDbContext context) : IProductService
         string? categoryName = null;
         if (p.CategoryId.HasValue)
         {
-            var cat = await context.Categories
+            var cat = await _context.Categories
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.CategoryId == p.CategoryId.Value, cancellationToken);
             categoryName = cat?.CategoryName;
         }
 
-        return Result<ProductResponseDto>.Success(new ProductResponseDto(
-            p.ProductId, p.ProductCode, p.CategoryId, p.Name, p.Price, p.Quantity, p.ImageUrl, p.CreatedAt, categoryName));
+        return Result<ProductResponseDto>.Success(new ProductResponseDto
+        {
+            ProductId = p.ProductId,
+            ProductCode = p.ProductCode,
+            CategoryId = p.CategoryId,
+            Name = p.Name,
+            Price = p.Price,
+            Quantity = p.Quantity,
+            ImageUrl = p.ImageUrl,
+            CreatedAt = p.CreatedAt,
+            CategoryName = categoryName
+        });
     }
 
     public async Task<Result<ProductResponseDto>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
@@ -116,7 +137,7 @@ public class ProductService(AppDbContext context) : IProductService
         if (string.IsNullOrWhiteSpace(request.ProductCode) || string.IsNullOrWhiteSpace(request.Name))
             return Result<ProductResponseDto>.Failure("Product code and name are required.");
 
-        var exists = await context.Products
+        var exists = await _context.Products
             .AnyAsync(p => p.ProductCode == request.ProductCode && !p.DeleteFlag, cancellationToken);
 
         if (exists)
@@ -124,7 +145,7 @@ public class ProductService(AppDbContext context) : IProductService
 
         if (request.CategoryId.HasValue)
         {
-            var catExists = await context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId.Value && !c.DeleteFlag, cancellationToken);
+            var catExists = await _context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId.Value && !c.DeleteFlag, cancellationToken);
             if (!catExists)
                 return Result<ProductResponseDto>.Failure("Specified category does not exist.");
         }
@@ -142,27 +163,36 @@ public class ProductService(AppDbContext context) : IProductService
             CreatedBy = request.CreatedBy
         };
 
-        context.Products.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Products.Add(entity);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<ProductResponseDto>.Success(new ProductResponseDto(
-            entity.ProductId, entity.ProductCode, entity.CategoryId, entity.Name, entity.Price, entity.Quantity, entity.ImageUrl, entity.CreatedAt));
+        return Result<ProductResponseDto>.Success(new ProductResponseDto
+        {
+            ProductId = entity.ProductId,
+            ProductCode = entity.ProductCode,
+            CategoryId = entity.CategoryId,
+            Name = entity.Name,
+            Price = entity.Price,
+            Quantity = entity.Quantity,
+            ImageUrl = entity.ImageUrl,
+            CreatedAt = entity.CreatedAt
+        });
     }
 
     public async Task<Result<ProductResponseDto>> UpdateProductAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
-        var entity = await context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
+        var entity = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
         if (entity is null)
             return Result<ProductResponseDto>.Failure("Product not found.");
 
-        var codeInUse = await context.Products
+        var codeInUse = await _context.Products
             .AnyAsync(p => p.ProductId != id && p.ProductCode == request.ProductCode && !p.DeleteFlag, cancellationToken);
         if (codeInUse)
             return Result<ProductResponseDto>.Failure($"Product with code '{request.ProductCode}' already exists.");
 
         if (request.CategoryId.HasValue)
         {
-            var catExists = await context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId.Value && !c.DeleteFlag, cancellationToken);
+            var catExists = await _context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId.Value && !c.DeleteFlag, cancellationToken);
             if (!catExists)
                 return Result<ProductResponseDto>.Failure("Specified category does not exist.");
         }
@@ -176,21 +206,30 @@ public class ProductService(AppDbContext context) : IProductService
         entity.UpdatedAt = DateTime.UtcNow;
         entity.UpdatedBy = request.UpdatedBy;
 
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<ProductResponseDto>.Success(new ProductResponseDto(
-            entity.ProductId, entity.ProductCode, entity.CategoryId, entity.Name, entity.Price, entity.Quantity, entity.ImageUrl, entity.CreatedAt));
+        return Result<ProductResponseDto>.Success(new ProductResponseDto
+        {
+            ProductId = entity.ProductId,
+            ProductCode = entity.ProductCode,
+            CategoryId = entity.CategoryId,
+            Name = entity.Name,
+            Price = entity.Price,
+            Quantity = entity.Quantity,
+            ImageUrl = entity.ImageUrl,
+            CreatedAt = entity.CreatedAt
+        });
     }
 
     public async Task<Result> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
     {
-        var entity = await context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
+        var entity = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
         if (entity is null)
             return Result.Failure("Product not found.");
 
         entity.DeleteFlag = true;
         entity.UpdatedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success("Product deleted successfully.");
     }
