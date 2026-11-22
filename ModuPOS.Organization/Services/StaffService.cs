@@ -7,13 +7,20 @@ using ModuPOS.Organization.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-public class StaffService(AppDbContext context) : IStaffService
+public class StaffService : IStaffService
 {
+    private readonly AppDbContext _context;
+
+    public StaffService(AppDbContext context)
+    {
+        _context = context;
+    }
+
     public async Task<PagedResult<StaffResponseDto>> GetStaffListAsync(string? branchCode = null, PaginationRequest? request = null, CancellationToken cancellationToken = default)
     {
-        request ??= new PaginationRequest();
+        if (request is null) return PagedResult<StaffResponseDto>.Failure("Request cannot be null");
 
-        var query = context.Staff
+        var query = _context.Staff
             .AsNoTracking()
             .Where(s => !s.DeleteFlag);
 
@@ -26,8 +33,19 @@ public class StaffService(AppDbContext context) : IStaffService
             .OrderBy(s => s.StaffId)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(s => new StaffResponseDto(
-                s.StaffId, s.StaffCode, s.StaffName, s.DateOfBirth, s.Phone, s.Email, s.Address, s.BranchCode, s.IsActive, s.CreatedAt))
+            .Select(s => new StaffResponseDto
+            {
+                StaffId = s.StaffId,
+                StaffCode = s.StaffCode,
+                StaffName = s.StaffName,
+                DateOfBirth = s.DateOfBirth,
+                Phone = s.Phone,
+                Email = s.Email,
+                Address = s.Address,
+                BranchCode = s.BranchCode,
+                IsActive = s.IsActive,
+                CreatedAt = s.CreatedAt
+            })
             .ToListAsync(cancellationToken);
 
         var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
@@ -36,15 +54,26 @@ public class StaffService(AppDbContext context) : IStaffService
 
     public async Task<Result<StaffResponseDto>> GetStaffByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var s = await context.Staff
+        var s = await _context.Staff
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.StaffId == id && !x.DeleteFlag, cancellationToken);
 
         if (s is null)
             return Result<StaffResponseDto>.Failure("Staff not found.");
 
-        return Result<StaffResponseDto>.Success(new StaffResponseDto(
-            s.StaffId, s.StaffCode, s.StaffName, s.DateOfBirth, s.Phone, s.Email, s.Address, s.BranchCode, s.IsActive, s.CreatedAt));
+        return Result<StaffResponseDto>.Success(new StaffResponseDto
+        {
+            StaffId = s.StaffId,
+            StaffCode = s.StaffCode,
+            StaffName = s.StaffName,
+            DateOfBirth = s.DateOfBirth,
+            Phone = s.Phone,
+            Email = s.Email,
+            Address = s.Address,
+            BranchCode = s.BranchCode,
+            IsActive = s.IsActive,
+            CreatedAt = s.CreatedAt
+        });
     }
 
     public async Task<Result<StaffResponseDto>> CreateStaffAsync(CreateStaffRequest request, CancellationToken cancellationToken = default)
@@ -52,7 +81,7 @@ public class StaffService(AppDbContext context) : IStaffService
         if (string.IsNullOrWhiteSpace(request.StaffCode) || string.IsNullOrWhiteSpace(request.StaffName))
             return Result<StaffResponseDto>.Failure("Staff code and name are required.");
 
-        var exists = await context.Staff.AnyAsync(s => s.StaffCode == request.StaffCode && !s.DeleteFlag, cancellationToken);
+        var exists = await _context.Staff.AnyAsync(s => s.StaffCode == request.StaffCode && !s.DeleteFlag, cancellationToken);
         if (exists)
             return Result<StaffResponseDto>.Failure($"Staff with code '{request.StaffCode}' already exists.");
 
@@ -71,16 +100,27 @@ public class StaffService(AppDbContext context) : IStaffService
             CreatedBy = request.CreatedBy
         };
 
-        context.Staff.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Staff.Add(entity);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<StaffResponseDto>.Success(new StaffResponseDto(
-            entity.StaffId, entity.StaffCode, entity.StaffName, entity.DateOfBirth, entity.Phone, entity.Email, entity.Address, entity.BranchCode, entity.IsActive, entity.CreatedAt));
+        return Result<StaffResponseDto>.Success(new StaffResponseDto
+        {
+            StaffId = entity.StaffId,
+            StaffCode = entity.StaffCode,
+            StaffName = entity.StaffName,
+            DateOfBirth = entity.DateOfBirth,
+            Phone = entity.Phone,
+            Email = entity.Email,
+            Address = entity.Address,
+            BranchCode = entity.BranchCode,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt
+        });
     }
 
     public async Task<Result<StaffResponseDto>> UpdateStaffAsync(int id, UpdateStaffRequest request, CancellationToken cancellationToken = default)
     {
-        var entity = await context.Staff.FirstOrDefaultAsync(s => s.StaffId == id && !s.DeleteFlag, cancellationToken);
+        var entity = await _context.Staff.FirstOrDefaultAsync(s => s.StaffId == id && !s.DeleteFlag, cancellationToken);
         if (entity is null)
             return Result<StaffResponseDto>.Failure("Staff not found.");
 
@@ -94,21 +134,32 @@ public class StaffService(AppDbContext context) : IStaffService
         entity.UpdatedAt = DateTime.UtcNow;
         entity.UpdatedBy = request.UpdatedBy;
 
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<StaffResponseDto>.Success(new StaffResponseDto(
-            entity.StaffId, entity.StaffCode, entity.StaffName, entity.DateOfBirth, entity.Phone, entity.Email, entity.Address, entity.BranchCode, entity.IsActive, entity.CreatedAt));
+        return Result<StaffResponseDto>.Success(new StaffResponseDto
+        {
+            StaffId = entity.StaffId,
+            StaffCode = entity.StaffCode,
+            StaffName = entity.StaffName,
+            DateOfBirth = entity.DateOfBirth,
+            Phone = entity.Phone,
+            Email = entity.Email,
+            Address = entity.Address,
+            BranchCode = entity.BranchCode,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt
+        });
     }
 
     public async Task<Result> DeleteStaffAsync(int id, CancellationToken cancellationToken = default)
     {
-        var entity = await context.Staff.FirstOrDefaultAsync(s => s.StaffId == id && !s.DeleteFlag, cancellationToken);
+        var entity = await _context.Staff.FirstOrDefaultAsync(s => s.StaffId == id && !s.DeleteFlag, cancellationToken);
         if (entity is null)
             return Result.Failure("Staff not found.");
 
         entity.DeleteFlag = true;
         entity.UpdatedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success("Staff deleted successfully.");
     }

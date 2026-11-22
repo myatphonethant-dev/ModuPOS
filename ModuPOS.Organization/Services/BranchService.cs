@@ -7,11 +7,20 @@ using ModuPOS.Organization.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
 
-public class BranchService(AppDbContext context) : IBranchService
+public class BranchService : IBranchService
 {
+    private readonly AppDbContext _context;
+
+    public BranchService(AppDbContext context)
+    {
+        _context = context;
+    }
+
     public async Task<PagedResult<BranchResponseDto>> GetBranchesAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var query = context.Branches.AsNoTracking();
+        if (request is null) return PagedResult<BranchResponseDto>.Failure("Request cannot be null");
+
+        var query = _context.Branches.AsNoTracking();
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -19,7 +28,14 @@ public class BranchService(AppDbContext context) : IBranchService
             .OrderBy(b => b.BranchId)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(b => new BranchResponseDto(b.BranchId, b.BranchCode, b.BranchName, b.Address, b.CreatedAt))
+            .Select(b => new BranchResponseDto
+            {
+                BranchId = b.BranchId,
+                BranchCode = b.BranchCode,
+                BranchName = b.BranchName,
+                Address = b.Address,
+                CreatedAt = b.CreatedAt
+            })
             .ToListAsync(cancellationToken);
 
         var pagination = new Pagination(request.PageNumber, request.PageSize, totalCount);
@@ -28,14 +44,21 @@ public class BranchService(AppDbContext context) : IBranchService
 
     public async Task<Result<BranchResponseDto>> GetBranchByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var b = await context.Branches
+        var b = await _context.Branches
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.BranchId == id, cancellationToken);
 
         if (b is null)
             return Result<BranchResponseDto>.Failure("Branch not found.");
 
-        return Result<BranchResponseDto>.Success(new BranchResponseDto(b.BranchId, b.BranchCode, b.BranchName, b.Address, b.CreatedAt));
+        return Result<BranchResponseDto>.Success(new BranchResponseDto
+        {
+            BranchId = b.BranchId,
+            BranchCode = b.BranchCode,
+            BranchName = b.BranchName,
+            Address = b.Address,
+            CreatedAt = b.CreatedAt
+        });
     }
 
     public async Task<Result<BranchResponseDto>> CreateBranchAsync(CreateBranchRequest request, CancellationToken cancellationToken = default)
@@ -43,7 +66,7 @@ public class BranchService(AppDbContext context) : IBranchService
         if (string.IsNullOrWhiteSpace(request.BranchCode) || string.IsNullOrWhiteSpace(request.BranchName))
             return Result<BranchResponseDto>.Failure("Branch code and name are required.");
 
-        var exists = await context.Branches.AnyAsync(b => b.BranchCode == request.BranchCode, cancellationToken);
+        var exists = await _context.Branches.AnyAsync(b => b.BranchCode == request.BranchCode, cancellationToken);
         if (exists)
             return Result<BranchResponseDto>.Failure($"Branch with code '{request.BranchCode}' already exists.");
 
@@ -56,15 +79,22 @@ public class BranchService(AppDbContext context) : IBranchService
             CreatedBy = request.CreatedBy
         };
 
-        context.Branches.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Branches.Add(entity);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<BranchResponseDto>.Success(new BranchResponseDto(entity.BranchId, entity.BranchCode, entity.BranchName, entity.Address, entity.CreatedAt));
+        return Result<BranchResponseDto>.Success(new BranchResponseDto
+        {
+            BranchId = entity.BranchId,
+            BranchCode = entity.BranchCode,
+            BranchName = entity.BranchName,
+            Address = entity.Address,
+            CreatedAt = entity.CreatedAt
+        });
     }
 
     public async Task<Result<BranchResponseDto>> UpdateBranchAsync(int id, UpdateBranchRequest request, CancellationToken cancellationToken = default)
     {
-        var entity = await context.Branches.FirstOrDefaultAsync(b => b.BranchId == id, cancellationToken);
+        var entity = await _context.Branches.FirstOrDefaultAsync(b => b.BranchId == id, cancellationToken);
         if (entity is null)
             return Result<BranchResponseDto>.Failure("Branch not found.");
 
@@ -73,8 +103,15 @@ public class BranchService(AppDbContext context) : IBranchService
         entity.UpdatedAt = DateTime.UtcNow;
         entity.UpdatedBy = request.UpdatedBy;
 
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<BranchResponseDto>.Success(new BranchResponseDto(entity.BranchId, entity.BranchCode, entity.BranchName, entity.Address, entity.CreatedAt));
+        return Result<BranchResponseDto>.Success(new BranchResponseDto
+        {
+            BranchId = entity.BranchId,
+            BranchCode = entity.BranchCode,
+            BranchName = entity.BranchName,
+            Address = entity.Address,
+            CreatedAt = entity.CreatedAt
+        });
     }
 }
