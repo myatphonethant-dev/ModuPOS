@@ -4,7 +4,7 @@ namespace ModuPOS.Delivery.DTOs;
 
 public sealed class CustomerOrderResponse
 {
-    public Guid Id { get; init; }
+    public string Id { get; init; } = string.Empty;
     public string OrderNumber { get; init; } = string.Empty;
     public int BranchId { get; init; }
     public string CustomerName { get; init; } = string.Empty;
@@ -24,12 +24,11 @@ public sealed class CustomerOrderResponse
     public string? RiderPhone { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
-    public IReadOnlyList<CustomerOrderItemResponse> Items { get; init; } = [];
+    public List<CustomerOrderItemResponse> Items { get; set; } = [];
 }
 
 public sealed class CustomerOrderItemResponse
 {
-    public int ProductId { get; init; }
     public string ProductCode { get; init; } = string.Empty;
     public string ProductName { get; init; } = string.Empty;
     public decimal UnitPrice { get; init; }
@@ -40,6 +39,5 @@ public sealed class CustomerOrderItemResponse
 public sealed class CreatedCustomerOrderResponse
 {
     public CustomerOrderResponse Order { get; init; } = null!;
-    // Only returned once when the order is created. Store the hash, not this value.
     public string? PickupCode { get; init; }
 }

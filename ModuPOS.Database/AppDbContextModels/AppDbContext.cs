@@ -73,9 +73,12 @@ public partial class AppDbContext : DbContext
         {
             entity.ToTable("CustomerOrder");
 
+            entity.HasIndex(e => e.OrderNumber, "UQ_CustomerOrder_OrderNumber").IsUnique();
+
             entity.Property(e => e.Id)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.CancellationReason).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())", "DF_CustomerOrder_CreatedAt");
             entity.Property(e => e.CustomerEmail).HasMaxLength(200);
             entity.Property(e => e.CustomerName).HasMaxLength(200);
@@ -87,6 +90,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.OrderNumber)
                 .HasMaxLength(40)
                 .IsUnicode(false);
+            entity.Property(e => e.PaymentReference).HasMaxLength(200);
             entity.Property(e => e.PickupCodeHash)
                 .HasMaxLength(64)
                 .IsUnicode(false);

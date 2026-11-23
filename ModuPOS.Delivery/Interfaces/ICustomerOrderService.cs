@@ -1,8 +1,8 @@
-﻿using ModuPOS.Delivery.DTOs;
+﻿
+using ModuPOS.Delivery.DTOs;
 using ModuPOS.Delivery.Enums;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
-
 
 namespace ModuPOS.Delivery.Interfaces;
 
@@ -19,21 +19,21 @@ public interface ICustomerOrderService
         CancellationToken cancellationToken = default);
 
     Task<Result<CustomerOrderResponse>> GetByIdAsync(
-        Guid id,
+        string id,
         CancellationToken cancellationToken = default);
 
     Task<Result<CustomerOrderResponse>> UpdateStatusAsync(
-        Guid id,
+        string id,
         CustomerOrderStatus status,
         CancellationToken cancellationToken = default);
 
     Task<Result<CustomerOrderResponse>> AssignRiderAsync(
-        Guid id,
+        string id,
         AssignRiderRequest request,
         CancellationToken cancellationToken = default);
 
     Task<Result<CustomerOrderResponse>> VerifyPickupAsync(
-        Guid id,
+        string id,
         string pickupCode,
         CancellationToken cancellationToken = default);
 }
