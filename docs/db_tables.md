@@ -148,3 +148,37 @@ This document contains full table list of ModuPOS. This is still an ongoing sche
 | CreatedBy | varchar(50) | YES |  |  |
 | UpdatedAt | datetime2 | YES |  |  |
 | UpdatedBy | varchar(50) | YES |  |  |
+
+### `CustomerOrder`
+
+| Column | Type | Nullable | Key | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| Id | varchar(50) | NO | PK |  |
+| OrderNumber | varchar(40) | NO |  |  |
+| CustomerName | nvarchar(200) | NO |  |  |
+| CustomerPhone | nvarchar(50) | NO |  |  |
+| CustomerEmail | nvarchar(200) | YES |  |  |
+| DeliveryAddress | nvarchar(1000) | YES |  |  |
+| DeliveryInstructions | nvarchar(500) | YES |  |  |
+| CustomerNote | nvarchar(1000) | YES |  |  |
+| RiderName | nvarchar(200) | YES |  |  |
+| RiderPhone | nvarchar(50) | YES |  |  |
+| PickupCodeHash | varchar(64) | YES |  |  |
+| Subtotal | decimal(18,2) | NO |  |  |
+| DeliveryFee | decimal(18,2) | NO |  |  |
+| Total | decimal(18,2) | NO |  |  |
+| BranchId | int | NO |  |  |
+| Status | int | NO |  |  |
+| CreatedAt | datetime2 | NO |  |  |
+
+### `CustomerOrderItem`
+
+| Column | Type | Nullable | Key | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| Id | varchar(50) | NO | PK |  |
+| CustomerOrderId | varchar(50) | NO |  |  |
+| ProductCode | nvarchar(50) | NO |  |  |
+| ProductName | nvarchar(200) | NO |  |  |
+| UnitPrice | decimal(18,2) | NO |  |  |
+| Quantity | decimal(18,3) | NO |  |  |
+| LineTotal | decimal(18,2) | NO |  |  |

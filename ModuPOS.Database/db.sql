@@ -199,3 +199,45 @@ BEGIN
     );
 END
 GO
+
+-- 13. CustomerOrder Table
+IF OBJECT_ID(N'[dbo].[CustomerOrder]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[CustomerOrder] (
+        [Id] VARCHAR(50) NOT NULL,
+        [OrderNumber] VARCHAR(40) NOT NULL,
+        [CustomerName] NVARCHAR(200) NOT NULL,
+        [CustomerPhone] NVARCHAR(50) NOT NULL,
+        [CustomerEmail] NVARCHAR(200) NULL,
+        [DeliveryAddress] NVARCHAR(1000) NULL,
+        [DeliveryInstructions] NVARCHAR(500) NULL,
+        [CustomerNote] NVARCHAR(1000) NULL,
+        [RiderName] NVARCHAR(200) NULL,
+        [RiderPhone] NVARCHAR(50) NULL,
+        [PickupCodeHash] VARCHAR(64) NULL,
+        [Subtotal] DECIMAL(18,2) NOT NULL,
+        [DeliveryFee] DECIMAL(18,2) NOT NULL,
+        [Total] DECIMAL(18,2) NOT NULL,
+        [BranchId] INT NOT NULL,
+        [Status] INT NOT NULL,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT [DF_CustomerOrder_CreatedAt] DEFAULT (SYSUTCDATETIME()),
+        CONSTRAINT [PK_CustomerOrder] PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+GO
+
+-- 14. CustomerOrderItem Table
+IF OBJECT_ID(N'[dbo].[CustomerOrderItem]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[CustomerOrderItem] (
+        [Id] VARCHAR(50) NOT NULL,
+        [CustomerOrderId] VARCHAR(50) NOT NULL,
+        [ProductCode] NVARCHAR(50) NOT NULL,
+        [ProductName] NVARCHAR(200) NOT NULL,
+        [UnitPrice] DECIMAL(18,2) NOT NULL,
+        [Quantity] DECIMAL(18,3) NOT NULL,
+        [LineTotal] DECIMAL(18,2) NOT NULL,
+        CONSTRAINT [PK_CustomerOrderItem] PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+GO
