@@ -15,6 +15,10 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Category> Categories { get; set; }
 
+    public virtual DbSet<CustomerOrder> CustomerOrders { get; set; }
+
+    public virtual DbSet<CustomerOrderItem> CustomerOrderItems { get; set; }
+
     public virtual DbSet<Permission> Permissions { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
@@ -63,6 +67,50 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.CategoryName).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<CustomerOrder>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Delivery__3214EC07419731F1");
+
+            entity.ToTable("CustomerOrder");
+
+            entity.Property(e => e.Id)
+                .HasMaxLength(26)
+                .IsUnicode(false);
+            entity.Property(e => e.CustomerEmail).HasMaxLength(200);
+            entity.Property(e => e.CustomerName).HasMaxLength(200);
+            entity.Property(e => e.CustomerNote).HasMaxLength(1000);
+            entity.Property(e => e.CustomerPhone).HasMaxLength(50);
+            entity.Property(e => e.DeliveryAddress).HasMaxLength(1000);
+            entity.Property(e => e.DeliveryFee).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.DeliveryInstructions).HasMaxLength(500);
+            entity.Property(e => e.OrderNumber)
+                .HasMaxLength(40)
+                .IsUnicode(false);
+            entity.Property(e => e.PickupCodeHash)
+                .HasMaxLength(64)
+                .IsUnicode(false);
+            entity.Property(e => e.RiderName).HasMaxLength(200);
+            entity.Property(e => e.RiderPhone).HasMaxLength(50);
+            entity.Property(e => e.Subtotal).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Total).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<CustomerOrderItem>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Delivery__3214EC071AD48198");
+
+            entity.ToTable("CustomerOrderItem");
+
+            entity.Property(e => e.Id)
+                .HasMaxLength(26)
+                .IsUnicode(false);
+            entity.Property(e => e.LineTotal).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProductCode).HasMaxLength(50);
+            entity.Property(e => e.ProductName).HasMaxLength(200);
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 3)");
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
         });
 
         modelBuilder.Entity<Permission>(entity =>
