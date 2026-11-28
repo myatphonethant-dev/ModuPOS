@@ -100,14 +100,14 @@ public class ProductService : IProductService
         return PagedResult<SearchProductsResponse>.Success(items, pagination);
     }
 
-    public async Task<Result<ProductResponseDto>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductResponse>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var p = await _context.Products
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ProductId == id && !x.DeleteFlag, cancellationToken);
 
         if (p is null)
-            return Result<ProductResponseDto>.Failure("Product not found.");
+            return Result<ProductResponse>.Failure("Product not found.");
 
         string? categoryName = null;
         if (p.CategoryId.HasValue)
@@ -118,7 +118,7 @@ public class ProductService : IProductService
             categoryName = cat?.CategoryName;
         }
 
-        return Result<ProductResponseDto>.Success(new ProductResponseDto
+        return Result<ProductResponse>.Success(new ProductResponse
         {
             ProductId = p.ProductId,
             ProductCode = p.ProductCode,
@@ -132,22 +132,22 @@ public class ProductService : IProductService
         });
     }
 
-    public async Task<Result<ProductResponseDto>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductResponse>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.ProductCode) || string.IsNullOrWhiteSpace(request.Name))
-            return Result<ProductResponseDto>.Failure("Product code and name are required.");
+            return Result<ProductResponse>.Failure("Product code and name are required.");
 
         var exists = await _context.Products
             .AnyAsync(p => p.ProductCode == request.ProductCode && !p.DeleteFlag, cancellationToken);
 
         if (exists)
-            return Result<ProductResponseDto>.Failure($"Product with code '{request.ProductCode}' already exists.");
+            return Result<ProductResponse>.Failure($"Product with code '{request.ProductCode}' already exists.");
 
         if (request.CategoryId.HasValue)
         {
             var catExists = await _context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId.Value && !c.DeleteFlag, cancellationToken);
             if (!catExists)
-                return Result<ProductResponseDto>.Failure("Specified category does not exist.");
+                return Result<ProductResponse>.Failure("Specified category does not exist.");
         }
 
         var entity = new Product
@@ -166,7 +166,7 @@ public class ProductService : IProductService
         _context.Products.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<ProductResponseDto>.Success(new ProductResponseDto
+        return Result<ProductResponse>.Success(new ProductResponse
         {
             ProductId = entity.ProductId,
             ProductCode = entity.ProductCode,
@@ -179,22 +179,22 @@ public class ProductService : IProductService
         });
     }
 
-    public async Task<Result<ProductResponseDto>> UpdateProductAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductResponse>> UpdateProductAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id && !p.DeleteFlag, cancellationToken);
         if (entity is null)
-            return Result<ProductResponseDto>.Failure("Product not found.");
+            return Result<ProductResponse>.Failure("Product not found.");
 
         var codeInUse = await _context.Products
             .AnyAsync(p => p.ProductId != id && p.ProductCode == request.ProductCode && !p.DeleteFlag, cancellationToken);
         if (codeInUse)
-            return Result<ProductResponseDto>.Failure($"Product with code '{request.ProductCode}' already exists.");
+            return Result<ProductResponse>.Failure($"Product with code '{request.ProductCode}' already exists.");
 
         if (request.CategoryId.HasValue)
         {
             var catExists = await _context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId.Value && !c.DeleteFlag, cancellationToken);
             if (!catExists)
-                return Result<ProductResponseDto>.Failure("Specified category does not exist.");
+                return Result<ProductResponse>.Failure("Specified category does not exist.");
         }
 
         entity.ProductCode = request.ProductCode;
@@ -208,7 +208,7 @@ public class ProductService : IProductService
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<ProductResponseDto>.Success(new ProductResponseDto
+        return Result<ProductResponse>.Success(new ProductResponse
         {
             ProductId = entity.ProductId,
             ProductCode = entity.ProductCode,
