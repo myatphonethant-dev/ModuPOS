@@ -10,8 +10,15 @@ using ModuPOS.Shared.Results;
 
 namespace ModuPOS.Delivery.Services;
 
-public sealed class CustomerOrderService(AppDbContext context) : ICustomerOrderService
+public class CustomerOrderService : ICustomerOrderService
 {
+    private readonly AppDbContext context;
+
+    public CustomerOrderService(AppDbContext context)
+    {
+        this.context = context;
+    }
+
     public async Task<Result<CreatedCustomerOrderResponse>> CreateAsync(
         CreateCustomerOrderRequest request,
         CancellationToken cancellationToken = default)

@@ -3,61 +3,93 @@ namespace ModuPOS.Organization.DTOs;
 public class CreateStaffRequest
 {
     public string StaffCode { get; set; } = string.Empty;
+
     public string StaffName { get; set; } = string.Empty;
+
     public DateTime? DateOfBirth { get; set; }
-    public string? Phone { get; set; }
-    public string? Email { get; set; }
-    public string? Address { get; set; }
-    public string? BranchCode { get; set; }
-    public string? CreatedBy { get; set; }
+
+    public string Phone { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public string Address { get; set; } = string.Empty;
+
+    public string BranchCode { get; set; } = string.Empty;
+
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 public class UpdateStaffRequest
 {
     public string StaffName { get; set; } = string.Empty;
+
     public DateTime? DateOfBirth { get; set; }
-    public string? Phone { get; set; }
-    public string? Email { get; set; }
-    public string? Address { get; set; }
-    public string? BranchCode { get; set; }
+
+    public string Phone { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public string Address { get; set; } = string.Empty;
+
+    public string BranchCode { get; set; } = string.Empty;
+
     public bool IsActive { get; set; } = true;
-    public string? UpdatedBy { get; set; }
+
+    public string UpdatedBy { get; set; } = string.Empty;
 }
 
-public sealed record StaffResponseDto
+public class StaffResponseDto
 {
-    public int StaffId { get; init; }
-    public string StaffCode { get; init; } = string.Empty;
-    public string StaffName { get; init; } = string.Empty;
-    public DateTime? DateOfBirth { get; init; }
-    public string? Phone { get; init; }
-    public string? Email { get; init; }
-    public string? Address { get; init; }
-    public string? BranchCode { get; init; }
-    public bool IsActive { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public int StaffId { get; set; }
+
+    public string StaffCode { get; set; } = string.Empty;
+
+    public string StaffName { get; set; } = string.Empty;
+
+    public DateTime? DateOfBirth { get; set; }
+
+    public string Phone { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public string Address { get; set; } = string.Empty;
+
+    public string BranchCode { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 }
 
 public class CreateStaffRoleRequest
 {
     public string StaffRoleCode { get; set; } = string.Empty;
+
     public string StaffRoleName { get; set; } = string.Empty;
+
     public decimal? Salary { get; set; }
-    public string? CreatedBy { get; set; }
+
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 public class UpdateStaffRoleRequest
 {
     public string StaffRoleName { get; set; } = string.Empty;
+
     public decimal? Salary { get; set; }
-    public string? UpdatedBy { get; set; }
+
+    public string UpdatedBy { get; set; } = string.Empty;
 }
 
-public sealed record StaffRoleResponseDto
+public class StaffRoleResponseDto
 {
-    public int StaffRoleId { get; init; }
-    public string StaffRoleCode { get; init; } = string.Empty;
-    public string StaffRoleName { get; init; } = string.Empty;
-    public decimal? Salary { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public int StaffRoleId { get; set; }
+
+    public string StaffRoleCode { get; set; } = string.Empty;
+
+    public string StaffRoleName { get; set; } = string.Empty;
+
+    public decimal? Salary { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 }

@@ -3,23 +3,32 @@ namespace ModuPOS.Organization.DTOs;
 public class CreateBranchRequest
 {
     public string BranchCode { get; set; } = string.Empty;
+
     public string BranchName { get; set; } = string.Empty;
-    public string? Address { get; set; }
-    public string? CreatedBy { get; set; }
+
+    public string Address { get; set; } = string.Empty;
+
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 public class UpdateBranchRequest
 {
     public string BranchName { get; set; } = string.Empty;
-    public string? Address { get; set; }
-    public string? UpdatedBy { get; set; }
+
+    public string Address { get; set; } = string.Empty;
+
+    public string UpdatedBy { get; set; } = string.Empty;
 }
 
-public sealed record BranchResponseDto
+public class BranchResponseDto
 {
-    public int BranchId { get; init; }
-    public string BranchCode { get; init; } = string.Empty;
-    public string BranchName { get; init; } = string.Empty;
-    public string? Address { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public int BranchId { get; set; }
+
+    public string BranchCode { get; set; } = string.Empty;
+
+    public string BranchName { get; set; } = string.Empty;
+
+    public string Address { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; }
 }

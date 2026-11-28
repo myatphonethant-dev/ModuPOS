@@ -1,6 +1,6 @@
 ﻿namespace ModuPOS.LicenseManagement.Models;
 
-public sealed class LicenseValidationOptions
+public class LicenseValidationOptions
 {
     public const string SectionName = "License";
 

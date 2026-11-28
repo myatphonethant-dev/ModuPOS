@@ -2,35 +2,24 @@ namespace ModuPOS.Shared.Results;
 
 using System.Text.Json.Serialization;
 
-public class Result
+[method: JsonConstructor]
+public class Result(bool isSuccess, string message)
 {
-    public bool IsSuccess { get; init; }
+    public bool IsSuccess { get; init; } = isSuccess;
 
-    public string Message { get; init; }
+    public string Message { get; init; } = message;
 
     public bool IsFailure => !IsSuccess;
-
-    [JsonConstructor]
-    public Result(bool isSuccess, string message)
-    {
-        IsSuccess = isSuccess;
-        Message = message;
-    }
 
     public static Result Success(string message = "Success") => new(true, message);
 
     public static Result Failure(string message) => new(false, message);
 }
 
-public class Result<T> : Result
+[method: JsonConstructor]
+public class Result<T>(bool isSuccess, string message, T? data) : Result(isSuccess, message)
 {
-    public T? Data { get; init; }
-
-    [JsonConstructor]
-    public Result(bool isSuccess, string message, T? data) : base(isSuccess, message)
-    {
-        Data = data;
-    }
+    public T? Data { get; init; } = data;
 
     public static Result<T> Success(T data, string message = "Success") => new(true, message, data);
 

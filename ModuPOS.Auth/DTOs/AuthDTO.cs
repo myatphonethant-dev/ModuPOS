@@ -1,52 +1,107 @@
 namespace ModuPOS.Auth.DTOs;
 
-public record LoginRequest(string Username, string Password);
+public class LoginRequest
+{
+    public string Username { get; set; } = string.Empty;
 
-public record LoginResponse(
-    string AccessToken,
-    string RefreshToken,
-    DateTime ExpiresAt,
-    int UserId,
-    string Username,
-    int RoleId,
-    string? RoleName,
-    List<string> Permissions);
+    public string Password { get; set; } = string.Empty;
+}
 
-public record RefreshTokenRequest(string RefreshToken);
+public class LoginResponse
+{
+    public string AccessToken { get; set; } = string.Empty;
 
-public record CreateUserRequest(
-    string Username,
-    string Password,
-    int RoleId,
-    string? Email = null,
-    string? CreatedBy = null);
+    public string RefreshToken { get; set; } = string.Empty;
 
-public record UpdateUserRequest(
-    int RoleId,
-    string? Email = null,
-    bool IsActive = true,
-    string? UpdatedBy = null);
+    public DateTime ExpiresAt { get; set; }
 
-public record UserResponseDto(
-    int Id,
-    int RoleId,
-    string Username,
-    string? Email,
-    bool IsActive,
-    DateTime CreatedAt,
-    string? RoleName = null);
+    public int UserId { get; set; }
 
-public record RoleDto(
-    int Id,
-    string Name,
-    List<int> PermissionIds,
-    List<string> PermissionNames);
+    public string Username { get; set; } = string.Empty;
 
-public record CreateRoleRequest(string Name, List<int>? PermissionIds = null);
+    public int RoleId { get; set; }
 
-public record UpdateRoleRequest(
-    string? Name = null,
-    List<int>? PermissionIdsToAdd = null,
-    List<int>? PermissionIdsToRemove = null);
+    public string RoleName { get; set; } = string.Empty;
 
-public record PermissionDto(int Id, string Name);
+    public List<string> Permissions { get; set; } = new List<string>();
+}
+
+public class RefreshTokenRequest
+{
+    public string RefreshToken { get; set; } = string.Empty;
+}
+
+public class CreateUserRequest
+{
+    public string Username { get; set; } = string.Empty;
+
+    public string Password { get; set; } = string.Empty;
+
+    public int RoleId { get; set; }
+
+    public string Email { get; set; } = string.Empty;
+
+    public string CreatedBy { get; set; } = string.Empty;
+}
+
+public class UpdateUserRequest
+{
+    public int RoleId { get; set; }
+
+    public string Email { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; } = true;
+
+    public string UpdatedBy { get; set; } = string.Empty;
+}
+
+public class UserResponseDto
+{
+    public int Id { get; set; }
+
+    public int RoleId { get; set; }
+
+    public string Username { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; } = true;
+
+    public DateTime CreatedAt { get; set; }
+
+    public string RoleName { get; set; } = string.Empty;
+}
+
+public class RoleDto
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public List<int> PermissionIds { get; set; } = new List<int>();
+
+    public List<string> PermissionNames { get; set; } = new List<string>();
+}
+
+public class CreateRoleRequest
+{
+    public string Name { get; set; } = string.Empty;
+
+    public List<int>? PermissionIds { get; set; } = null;
+}
+
+public class UpdateRoleRequest
+{
+    public string Name { get; set; } = string.Empty;
+
+    public List<int>? PermissionIdsToAdd { get; set; } = null;
+
+    public List<int>? PermissionIdsToRemove { get; set; } = null;
+}
+
+public class PermissionDto
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+}

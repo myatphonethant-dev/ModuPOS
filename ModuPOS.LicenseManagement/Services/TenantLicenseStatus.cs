@@ -2,7 +2,7 @@ namespace ModuPOS.LicenseManagement.Services;
 
 using ModuPOS.LicenseManagement.Interfaces;
 
-public sealed class TenantLicenseStatus(ILicenseProvider provider, TimeProvider time) : ITenantLicenseStatus
+public class TenantLicenseStatus(ILicenseProvider provider, TimeProvider time) : ITenantLicenseStatus
 {
     public async Task<bool> IsValidAsync(Guid businessId, CancellationToken cancellationToken = default)
     {

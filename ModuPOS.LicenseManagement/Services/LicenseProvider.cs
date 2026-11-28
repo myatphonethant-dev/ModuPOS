@@ -4,7 +4,7 @@ using ModuPOS.LicenseManagement.Models;
 
 namespace ModuPOS.LicenseManagement.Services;
 
-public sealed class LicenseProvider(
+public class LicenseProvider(
     ILicenseValidator validator,
     IOptions<LicenseValidationOptions> options) : ILicenseProvider
 {

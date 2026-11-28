@@ -7,7 +7,7 @@ using ModuPOS.LicenseManagement.Interfaces;
 
 namespace ModuPOS.FeatureManagement.Services;
 
-public sealed class FeatureManager(
+public class FeatureManager(
     CustomerFeatureService customerFeatureService,
     ILicenseProvider licenseProvider) : IFeatureManager
 {

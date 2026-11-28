@@ -2,7 +2,7 @@
 
 namespace ModuPOS.FeatureManagement.Features.CustomerFeatures;
 
-public sealed class CustomerFeatureService(
+public class CustomerFeatureService(
     ICustomerFeatureRepository repository)
 {
     public Task<CustomerFeature?> GetAsync(

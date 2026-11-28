@@ -1,11 +1,11 @@
-namespace ModuPOS.Organization.Services;
-
 using Microsoft.EntityFrameworkCore;
 using ModuPOS.Database.AppDbContextModels;
 using ModuPOS.Organization.DTOs;
 using ModuPOS.Organization.Interfaces;
 using ModuPOS.Shared.Pagination;
 using ModuPOS.Shared.Results;
+
+namespace ModuPOS.Organization.Services;
 
 public class StaffService : IStaffService
 {

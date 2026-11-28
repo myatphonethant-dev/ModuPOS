@@ -4,7 +4,7 @@ public class LicenseValidationResult
 {
     public bool IsValid { get; set; }
 
-    public string? ErrorMessage { get; set; }
+    public string ErrorMessage { get; set; } = string.Empty;
 
     public LicensePayload? License { get; set; }
 

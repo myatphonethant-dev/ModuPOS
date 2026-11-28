@@ -1,6 +1,6 @@
 ﻿namespace ModuPOS.Shared.Pagination;
 
-public abstract record PaginationRequest
+public class PaginationRequest
 {
     public int PageNumber { get; init; } = 1;
 

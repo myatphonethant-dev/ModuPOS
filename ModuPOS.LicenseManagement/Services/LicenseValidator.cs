@@ -9,7 +9,7 @@ using ModuPOS.LicenseManagement.Models;
 
 namespace ModuPOS.LicenseManagement.Services;
 
-public sealed class LicenseValidator(
+public class LicenseValidator(
     IOptions<LicenseValidationOptions> options) : ILicenseValidator
 {
     private readonly LicenseValidationOptions _options = options.Value;

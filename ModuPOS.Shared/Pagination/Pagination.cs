@@ -37,19 +37,12 @@ public class Pagination
     }
 }
 
-public class PagedResult<T> : Result
+[method: JsonConstructor]
+public class PagedResult<T>(bool isSuccess, string message, List<T> data, Pagination pagination) : Result(isSuccess, message)
 {
-    public List<T> Data { get; init; }
+    public List<T> Data { get; init; } = data;
 
-    public Pagination Pagination { get; init; }
-
-    [JsonConstructor]
-    public PagedResult(bool isSuccess, string message, List<T> data, Pagination pagination)
-        : base(isSuccess, message)
-    {
-        Data = data;
-        Pagination = pagination;
-    }
+    public Pagination Pagination { get; init; } = pagination;
 
     public static PagedResult<T> Success(List<T> data, Pagination pagination, string message = "Success")
         => new(true, message, data, pagination);

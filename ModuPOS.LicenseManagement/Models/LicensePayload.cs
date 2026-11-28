@@ -1,6 +1,6 @@
 ﻿namespace ModuPOS.LicenseManagement.Models;
 
-public sealed class LicensePayload
+public class LicensePayload
 {
     public required string LicenseId { get; init; }
 
