@@ -1,11 +1,11 @@
-namespace ModuPOS.Auth;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModuPOS.Auth.Interfaces;
 using ModuPOS.Auth.Services;
 
-public static class FeatureManager
+namespace ModuPOS.Auth;
+
+public static class DependencyInjection
 {
     public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration)
     {

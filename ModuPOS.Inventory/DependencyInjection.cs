@@ -1,10 +1,10 @@
-namespace ModuPOS.Inventory;
-
 using Microsoft.Extensions.DependencyInjection;
 using ModuPOS.Inventory.Interfaces;
 using ModuPOS.Inventory.Services;
 
-public static class FeatureManager
+namespace ModuPOS.Inventory;
+
+public static class DependencyInjection
 {
     public static IServiceCollection AddInventoryModule(this IServiceCollection services)
     {

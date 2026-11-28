@@ -1,10 +1,10 @@
-namespace ModuPOS.Organization;
-
 using Microsoft.Extensions.DependencyInjection;
 using ModuPOS.Organization.Interfaces;
 using ModuPOS.Organization.Services;
 
-public static class FeatureManager
+namespace ModuPOS.Organization;
+
+public static class DependencyInjection
 {
     public static IServiceCollection AddOrganizationModule(this IServiceCollection services)
     {

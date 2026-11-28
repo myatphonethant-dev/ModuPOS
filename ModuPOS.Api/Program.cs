@@ -3,8 +3,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using ModuPOS.Auth;
 using ModuPOS.Database;
+using ModuPOS.Delivery;
 using ModuPOS.Inventory;
 using ModuPOS.Organization;
+using ModuPOS.Reporting;
+using ModuPOS.Sale;
+using ModuPOS.Loyalty;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +22,10 @@ builder.Services.AddModuPOSDatabase(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddInventoryModule();
 builder.Services.AddOrganizationModule();
+builder.Services.AddDeliveryModule();
+builder.Services.AddReportingModule();
+builder.Services.AddSaleModule();
+builder.Services.AddLoyaltyModule();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "ModuPOS_Super_Secret_Key_For_Jwt_Signing_Must_Be_Long_Enough_2026";

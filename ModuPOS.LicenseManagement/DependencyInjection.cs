@@ -1,13 +1,13 @@
-﻿namespace ModuPOS.LicenseManagement;
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ModuPOS.LicenseManagement.Interfaces;
 using ModuPOS.LicenseManagement.Models;
 using ModuPOS.LicenseManagement.Services;
 
-public static class FeatureManager
+namespace ModuPOS.LicenseManagement;
+
+public static class DependencyInjection
 {
     public static IServiceCollection AddLicenseManagement(
         this IServiceCollection services,

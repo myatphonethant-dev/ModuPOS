@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -13,6 +13,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\ModuPOS.Delivery\ModuPOS.Delivery.csproj" />
+		<ProjectReference Include="..\ModuPOS.Loyalty\ModuPOS.Loyalty.csproj" />
+		<ProjectReference Include="..\ModuPOS.Reporting\ModuPOS.Reporting.csproj" />
+		<ProjectReference Include="..\ModuPOS.Sale\ModuPOS.Sale.csproj" />
 		<ProjectReference Include="..\ModuPOS.Shared\ModuPOS.Shared.csproj" />
 		<ProjectReference Include="..\ModuPOS.Database\ModuPOS.Database.csproj" />
 		<ProjectReference Include="..\ModuPOS.Auth\ModuPOS.Auth.csproj" />
